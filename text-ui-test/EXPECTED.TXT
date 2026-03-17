@@ -5,5 +5,21 @@ Hello from
 | |_| | |_| |   <  __/
 |____/ \__,_|_|\_\___|
 
-What is your name?
-Hello James Gosling
+Transaction added successfully.
+Transaction added successfully.
+Transaction added successfully.
+ID: 1 | Date: 15/03/2026 | Desc: Salary | Amount: 5000.00 | Type: credit | Currency: SGD
+ID: 2 | Date: 16/03/2026 | Desc: Lunch | Amount: 12.50 | Type: debit | Currency: USD
+ID: 3 | Date: 17/03/2026 | Desc: Groceries | Amount: 50.00 | Type: debit | Currency: EUR
+Transaction edited successfully.
+ID: 1 | Date: 15/03/2026 | Desc: Salary | Amount: 5000.00 | Type: credit | Currency: SGD
+ID: 2 | Date: 16/03/2026 | Desc: Lunch | Amount: 15.00 | Type: debit | Currency: SGD
+ID: 3 | Date: 17/03/2026 | Desc: Groceries | Amount: 50.00 | Type: debit | Currency: EUR
+Error: Type must be strictly 'debit' or 'credit'.
+Error: Currency must be one of: SGD, USD, EUR.
+Transaction deleted successfully.
+ID: 2 | Date: 16/03/2026 | Desc: Lunch | Amount: 15.00 | Type: debit | Currency: SGD
+ID: 3 | Date: 17/03/2026 | Desc: Groceries | Amount: 50.00 | Type: debit | Currency: EUR
+All transactions have been cleared.
+No transactions found.
+--- Transaction Manager Exited ---

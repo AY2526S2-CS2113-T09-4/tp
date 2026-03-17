@@ -1,1 +1,13 @@
-James Gosling
+add transaction -d 15/03/2026 -desc Salary -a 5000 -t credit -c SGD
+add transaction -d 16/03/2026 -desc Lunch -a 12.50 -t debit -c USD
+add transaction -d 17/03/2026 -desc Groceries -a 50.0 -t debit -c EUR
+list transaction
+edit transaction 2 -a 15.00 -c SGD
+list transaction
+add transaction -d 18/03/2026 -desc InvalidType -a 100 -t cash -c SGD
+add transaction -d 19/03/2026 -desc InvalidCurr -a 100 -t debit -c JPY
+delete transaction 1
+list transaction
+clear transaction
+list transaction
+exit
