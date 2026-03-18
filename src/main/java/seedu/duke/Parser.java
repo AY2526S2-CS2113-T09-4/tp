@@ -3,13 +3,17 @@ package seedu.duke;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Reads command line inputs, checks for format validation, handles errors, and
  * executes transaction commands.
  */
 public class Parser {
+    private static Logger logger = Logger.getLogger("Parser");
     private TransactionsList list;
+    
 
     public Parser(TransactionsList list) {
         assert list != null : "Parser requires a valid TransactionsList instance.";
@@ -27,8 +31,10 @@ public class Parser {
                 continue;
             }
             try {
+                logger.log(Level.INFO, "Processing user input: " + input);
                 processInput(input);
             } catch (Exception e) {
+                logger.log(Level.WARNING, "processing error", e);
                 System.out.println("Error: " + e.getMessage());
             }
         }
