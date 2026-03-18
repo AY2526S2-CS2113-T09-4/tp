@@ -70,7 +70,7 @@ public class Parser {
             handleEdit(arguments);
             break;
         default:
-            throw new IllegalArgumentException("Unknown command. Use add, list, edit, delete, or clear.");
+            throw new IllegalArgumentException("Unknown command. Use add, list, edit, delete, clear, or exit");
         }
     }
 

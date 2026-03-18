@@ -17,7 +17,7 @@ public class ParserTest {
 
     @BeforeEach
     public void setUp() {
-        list = new TransactionsList();
+        list = new TransactionsList(new Storage("data/test-list.txt"));
         System.setOut(new PrintStream(outputStreamCaptor));
     }
 
@@ -91,7 +91,7 @@ public class ParserTest {
         runParserWithInput(input);
 
         String output = outputStreamCaptor.toString();
-        assertTrue(output.contains("All transactions have been cleared."));
+        assertTrue(output.contains("All transactions cleared."));
         assertTrue(output.contains("No transactions found."));
     }
 }

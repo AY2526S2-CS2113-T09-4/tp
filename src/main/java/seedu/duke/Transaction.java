@@ -6,7 +6,7 @@ import java.time.format.DateTimeParseException;
 
 /**
  * Represents a financial transaction containing an auto-incremented ID, date,
- * description, amount, type (struct-like), and validated currency.
+ * description, amount, type, and validated currency.
  */
 public class Transaction {
     private static int nextId = 1;
@@ -27,8 +27,6 @@ public class Transaction {
         }
 
         this.id = nextId++;
-        assert this.id > 0 : "Auto-incremented ID must be positive.";
-
         this.date = parseDate(dateStr);
         this.description = description;
         this.amount = amount;
@@ -36,8 +34,37 @@ public class Transaction {
         this.currency = CurrencyValidator.validateAndGet(currencyStr);
     }
 
+    /**
+     * Constructor used when loading transactions from storage.
+     */
+    private Transaction(int id, String dateStr, String description, Double amount, String typeStr, String currencyStr) {
+        if (dateStr == null || description == null || amount == null || typeStr == null || currencyStr == null) {
+            throw new IllegalArgumentException("Missing required transaction details.");
+        }
+        if (description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description cannot be empty.");
+        }
+
+        this.id = id;
+        this.date = parseDate(dateStr);
+        this.description = description;
+        this.amount = amount;
+        this.type = new TransactionType(typeStr);
+        this.currency = CurrencyValidator.validateAndGet(currencyStr);
+    }
+
+    public static Transaction fromStorage(int id, String dateStr, String description,
+                                          Double amount, String typeStr, String currencyStr) {
+        return new Transaction(id, dateStr, description, amount, typeStr, currencyStr);
+    }
+
+    public static void updateNextId(int nextIdValue) {
+        if (nextIdValue > nextId) {
+            nextId = nextIdValue;
+        }
+    }
+
     private LocalDate parseDate(String dateStr) {
-        assert dateStr != null : "Date string cannot be null.";
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             return LocalDate.parse(dateStr, formatter);
@@ -48,6 +75,27 @@ public class Transaction {
 
     public int getId() {
         return id;
+    }
+
+    public String getDateString() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return date.format(formatter);
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public String getType() {
+        return type.value;
+    }
+
+    public String getCurrency() {
+        return currency;
     }
 
     public void update(String dateStr, String description, Double amount, String typeStr, String currencyStr) {
@@ -69,14 +117,15 @@ public class Transaction {
         if (currencyStr != null) {
             this.currency = CurrencyValidator.validateAndGet(currencyStr);
         }
-        assert this.description != null && !this.description.isEmpty() : "Description state is invalid after update.";
+    }
+
+    public LocalDate getDate() {
+        return date;
     }
 
     @Override
     public String toString() {
-        assert date != null : "Date should not be null when formatting.";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         return String.format("ID: %d | Date: %s | Desc: %s | Amount: %.2f | Type: %s | Currency: %s",
-                id, date.format(formatter), description, amount, type.value, currency);
+                id, getDateString(), description, amount, type.value, currency);
     }
 }
