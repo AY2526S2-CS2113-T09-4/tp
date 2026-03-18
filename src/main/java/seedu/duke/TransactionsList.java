@@ -13,6 +13,7 @@ public class TransactionsList {
 
     private CurrencyConverter converter;
     private String displayCurrency = "SGD";
+    private boolean autoConvertDisplay = false;
 
     public TransactionsList(Storage storage) {
         this.storage = storage;
@@ -29,6 +30,10 @@ public class TransactionsList {
 
     public String getDisplayCurrency() {
         return displayCurrency;
+    }
+
+    public void setAutoConvertDisplay(boolean autoConvertDisplay) {
+        this.autoConvertDisplay = autoConvertDisplay;
     }
 
     public void addTransaction(Transaction transaction) {
@@ -48,7 +53,7 @@ public class TransactionsList {
     }
 
     private void printTransactionWithDisplayAmount(Transaction transaction) {
-        if (converter == null) {
+        if (converter == null || !autoConvertDisplay) {
             System.out.println(transaction);
             return;
         }
@@ -62,10 +67,12 @@ public class TransactionsList {
         if (transaction.getCurrency().equals(displayCurrency)) {
             System.out.println(transaction);
         } else {
-            System.out.printf("%s | Display: %.2f %s%n",
+            System.out.printf(
+                    "%s | Display: %.2f %s%n",
                     transaction,
                     converted,
-                    displayCurrency);
+                    displayCurrency
+            );
         }
     }
 

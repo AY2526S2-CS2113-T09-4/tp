@@ -98,6 +98,7 @@ public class Parser {
             throw new IllegalArgumentException(
                 "Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.");
         }
+
     }
 
     private Map<String, String> parseArguments(String args) {
@@ -149,10 +150,14 @@ public class Parser {
             String to = map.get("-to");
             if (to != null) {
                 list.setDisplayCurrency(to);
+                list.setAutoConvertDisplay(true);
+            } else {
+                list.setAutoConvertDisplay(false);
             }
+        } else {
+            list.setAutoConvertDisplay(false);
         }
 
-        System.out.println("Listing transactions in " + list.getDisplayCurrency() + " view:");
         list.listTransactions();
     }
 
@@ -234,6 +239,7 @@ public class Parser {
         to = CurrencyValidator.validateAndGet(to);
 
         double result = converter.convert(amount, from, to);
+
         System.out.printf("%.2f %s = %.2f %s%n", amount, from, result, to);
     }
 
@@ -263,12 +269,14 @@ public class Parser {
         Transaction transaction = list.getTransactionById(id);
         double result = converter.convert(transaction.getAmount(), transaction.getCurrency(), to);
 
-        System.out.printf("Transaction %d: %.2f %s = %.2f %s%n",
+        System.out.printf(
+                "Transaction %d: %.2f %s = %.2f %s%n",
                 id,
                 transaction.getAmount(),
                 transaction.getCurrency(),
                 result,
-                to);
+                to
+        );
     }
 
     private void handleRates(String args) {

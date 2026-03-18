@@ -1,7 +1,7 @@
 package seedu.duke;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Duke {
     /**
@@ -26,27 +26,23 @@ public class Duke {
         try {
             rateData = exchangeRateStorage.load();
         } catch (RuntimeException e) {
-            System.out.println("Warning: Could not load cached exchange rates.");
-            return;
+            rateData = createFallbackRateData();
         }
 
         CurrencyConverter converter = new CurrencyConverter(rateData);
         transactionList.setCurrencyConverter(converter);
 
-        List<String> supportedCurrencies = Arrays.asList("EUR", "SGD", "USD");
-
-        try {
-            ExchangeRateData liveData = liveExchangeRateService.fetchLatest("EUR", supportedCurrencies);
-            exchangeRateStorage.save(liveData);
-            converter.updateRates(liveData);
-            System.out.println("Live exchange rates refreshed for " + liveData.getDate() + ".");
-        } catch (RuntimeException e) {
-            System.out.println("Using cached exchange rates from " + converter.getRateDate() + ".");
-        }
-
         Parser parser = new Parser(transactionList, converter, exchangeRateStorage, liveExchangeRateService);
         parser.start();
 
         System.out.println("--- Transaction Manager Exited ---");
+    }
+
+    private static ExchangeRateData createFallbackRateData() {
+        Map<String, Double> rates = new HashMap<>();
+        rates.put("SGD", 1.46);
+        rates.put("USD", 1.09);
+
+        return new ExchangeRateData("EUR", "fallback", rates);
     }
 }
