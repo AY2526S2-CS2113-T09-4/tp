@@ -14,8 +14,8 @@ import java.util.logging.Logger;
  * Handles loading from and saving transactions to a local text file.
  */
 public class Storage {
-    private final String filePath;
     private static final Logger logger = Logger.getLogger("Storage");
+    private final String filePath;
 
     public Storage(String filePath) {
         this.filePath = filePath;

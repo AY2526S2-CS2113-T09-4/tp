@@ -9,9 +9,9 @@ import java.util.logging.Logger;
  * Stores and manages all transactions in memory, and saves them using Storage.
  */
 public class TransactionsList {
+    private static final Logger logger = Logger.getLogger("TransactionsList");
     private final List<Transaction> transactions;
     private final Storage storage;
-    private static final Logger logger = Logger.getLogger("TransactionsList");
 
     private CurrencyConverter converter;
     private String displayCurrency = "SGD";
