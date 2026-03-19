@@ -8,12 +8,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Handles loading from and saving transactions to a local text file.
  */
 public class Storage {
     private final String filePath;
+    private static final Logger logger = Logger.getLogger("Storage");
 
     public Storage(String filePath) {
         this.filePath = filePath;
@@ -23,6 +25,7 @@ public class Storage {
      * Loads transactions from the storage file.
      */
     public List<Transaction> load() {
+        logger.info("Loading transactions from file: " + filePath);
         List<Transaction> transactions = new ArrayList<>();
         File file = new File(filePath);
 
@@ -71,6 +74,7 @@ public class Storage {
      * Saves all transactions into the storage file.
      */
     public void save(List<Transaction> transactions) {
+        logger.info("Saving " + transactions.size() + " transactions to file: " + filePath);
         File file = new File(filePath);
         File parent = file.getParentFile();
 
