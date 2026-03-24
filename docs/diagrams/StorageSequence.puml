@@ -1,0 +1,40 @@
+@startuml
+skinparam backgroundColor #EEEBDC
+skinparam sequence {
+    ParticipantBackgroundColor #FFF
+    ActorBackgroundColor #FFF
+    LifeLineBackgroundColor #FFF
+}
+
+actor User
+participant "Duke" as Duke
+participant "Storage" as Storage
+participant "TransactionsList" as TransactionsList
+participant "Parser" as Parser
+participant "Transaction" as Transaction
+
+== Application startup ==
+Duke -> Storage : new Storage("data/ledger.txt")
+Duke -> TransactionsList : new TransactionsList(storage)
+TransactionsList -> Storage : load()
+Storage --> TransactionsList : List<Transaction>
+
+== Add and persist transaction ==
+User -> Duke : enters add command
+Duke -> Parser : start()
+Parser -> Transaction : new Transaction(...)
+Transaction --> Parser : transaction
+Parser -> TransactionsList : addTransaction(transaction)
+TransactionsList -> TransactionsList : transactions.add(transaction)
+TransactionsList -> Storage : save(transactions)
+Storage --> TransactionsList : write complete
+TransactionsList --> Parser : success
+Parser -> System.out : "Transaction added successfully."
+
+note over Storage
+  Storage persists transactions
+  in ledger.txt using tab-separated fields.
+  Existing transactions are loaded on startup,
+  and every write operation triggers save().
+end note
+@enduml
