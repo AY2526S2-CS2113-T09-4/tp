@@ -8,33 +8,52 @@ skinparam class {
 }
 
 class Duke {
-  -main(args: String[]): void
-  +logo: String
-  +transactionList: TransactionsList
-  +parser: Parser
+  +main(args: String[]): void
+  -createFallbackRateData(): ExchangeRateData
 }
 
 class Parser {
   -logger: Logger
   -list: TransactionsList
-  +Parser(list: TransactionsList)
+  -converter: CurrencyConverter
+  -exchangeRateStorage: ExchangeRateStorage
+  -liveExchangeRateService: LiveExchangeRateService
+  +Parser(list: TransactionsList, converter: CurrencyConverter, exchangeRateStorage: ExchangeRateStorage, liveExchangeRateService: LiveExchangeRateService)
   +start(): void
   -processInput(input: String): void
   -parseArguments(args: String): Map<String, String>
   -handleAdd(args: String): void
+  -handleList(args: String): void
   -handleDelete(args: String): void
   -handleEdit(args: String): void
+  -handleConvert(args: String): void
+  -handleConvertTransaction(args: String): void
+  -handleRates(args: String): void
+  -handleHelp(): void
 }
 
 class TransactionsList {
   -logger: Logger
-  -transactions: ArrayList<Transaction>
-  +TransactionsList()
-  +addTransaction(t: Transaction): void
+  -transactions: List<Transaction>
+  -storage: Storage
+  -converter: CurrencyConverter
+  -displayCurrency: String
+  -autoConvertDisplay: boolean
+  +TransactionsList(storage: Storage)
+  +setCurrencyConverter(converter: CurrencyConverter): void
+  +setDisplayCurrency(displayCurrency: String): void
+  +getDisplayCurrency(): String
+  +setAutoConvertDisplay(autoConvertDisplay: boolean): void
+  +addTransaction(transaction: Transaction): void
   +listTransactions(): void
+  -printTransactionWithDisplayAmount(transaction: Transaction): void
   +deleteTransaction(id: int): void
   +clearTransactions(): void
-  +editTransaction(id: int, dateStr: String, desc: String, amount: Double, type: String, currency: String): void
+  +editTransaction(id: int, date: String, desc: String, amount: Double, type: String, currency: String): void
+  +getTransactionById(id: int): Transaction
+  -findById(id: int): Transaction
+  -save(): void
+  +getTransactions(): List<Transaction>
 }
 
 class Transaction {
@@ -46,8 +65,16 @@ class Transaction {
   -type: TransactionType
   -currency: String
   +Transaction(dateStr: String, description: String, amount: Double, typeStr: String, currencyStr: String)
+  +fromStorage(id: int, dateStr: String, description: String, amount: Double, typeStr: String, currencyStr: String): Transaction
+  +updateNextId(nextIdValue: int): void
   -parseDate(dateStr: String): LocalDate
   +getId(): int
+  +getDate(): LocalDate
+  +getDateString(): String
+  +getDescription(): String
+  +getAmount(): double
+  +getType(): String
+  +getCurrency(): String
   +update(dateStr: String, description: String, amount: Double, typeStr: String, currencyStr: String): void
   +toString(): String
 }
@@ -57,55 +84,123 @@ class TransactionType {
   +TransactionType(value: String)
 }
 
+class Storage {
+  -logger: Logger
+  -filePath: String
+  +Storage(filePath: String)
+  +load(): List<Transaction>
+  +save(transactions: List<Transaction>): void
+  -formatTransaction(t: Transaction): String
+  -escape(text: String): String
+  -unescape(text: String): String
+}
+
 class CurrencyValidator {
   -APPROVED_CURRENCIES: List<String>
   +validateAndGet(currency: String): String
 }
 
-Duke --> Parser : creates
+class CurrencyConverter {
+  -rateData: ExchangeRateData
+  +CurrencyConverter(rateData: ExchangeRateData)
+  +updateRates(rateData: ExchangeRateData): void
+  +getBaseCurrency(): String
+  +getRateDate(): String
+  +convert(amount: double, fromCurrency: String, toCurrency: String): double
+  -getRate(currency: String): double
+}
+
+class ExchangeRateData {
+  -base: String
+  -date: String
+  -rates: Map<String, Double>
+  +ExchangeRateData()
+  +ExchangeRateData(base: String, date: String, rates: Map<String, Double>)
+  +getBase(): String
+  +getDate(): String
+  +getRates(): Map<String, Double>
+  +isValid(): boolean
+}
+
+class ExchangeRateStorage {
+  -filePath: String
+  -gson: Gson
+  +ExchangeRateStorage(filePath: String)
+  +load(): ExchangeRateData
+  +save(data: ExchangeRateData): void
+}
+
+class LiveExchangeRateService {
+  -API_URL: String
+  -client: HttpClient
+  -gson: Gson
+  +LiveExchangeRateService()
+  +fetchLatest(baseCurrency: String, symbols: List<String>): ExchangeRateData
+}
+
+Duke --> Storage : creates
 Duke --> TransactionsList : creates
+Duke --> ExchangeRateStorage : creates
+Duke --> LiveExchangeRateService : creates
+Duke --> CurrencyConverter : creates
+Duke --> Parser : creates
+
 Parser --> TransactionsList : uses
-TransactionsList --> Transaction : contains
+Parser --> CurrencyConverter : uses
+Parser --> ExchangeRateStorage : uses
+Parser --> LiveExchangeRateService : uses
+TransactionsList *-- Transaction : contains
+TransactionsList --> Storage : persists with
+TransactionsList --> CurrencyConverter : display conversion
 Transaction --> TransactionType : has
 Transaction --> CurrencyValidator : uses
+TransactionsList --> CurrencyValidator : uses
+CurrencyConverter --> ExchangeRateData : uses
+CurrencyConverter --> CurrencyValidator : uses
+ExchangeRateStorage --> ExchangeRateData : loads / saves
+LiveExchangeRateService --> ExchangeRateData : fetches
 
 note top of Duke
-  Main application class
-  Entry point for the program
-  Initializes components
-  Starts the input loop
+  Main application class.
+  Initializes transaction storage,
+  exchange-rate storage,
+  converter, parser,
+  and starts the input loop.
 end note
 
 note top of Parser
-  Handles user input parsing
-  Validates command format
-  Delegates to TransactionsList
-  Provides error messages
+  Parses user commands and delegates work.
+  Handles transaction CRUD,
+  currency conversion,
+  live rate refresh,
+  and help output.
 end note
 
 note top of TransactionsList
-  Manages collection of transactions
-  Provides CRUD operations
-  Auto-generates transaction IDs
-  Maintains data integrity
+  Stores transactions in memory.
+  Persists transaction changes using Storage.
+  Supports display-only converted views
+  through CurrencyConverter.
 end note
 
-note top of Transaction
-  Represents financial transaction
-  Auto-increments IDs
-  Validates data on creation
-  Provides update functionality
+note top of Storage
+  Handles loading and saving
+  transactions to ledger.txt.
 end note
 
-note top of TransactionType
-  Enum-like structure
-  Validates debit/credit types
-  Ensures type consistency
+note top of CurrencyConverter
+  Converts amounts between
+  supported currencies using
+  base-relative exchange rates.
 end note
 
-note top of CurrencyValidator
-  Static validation utility
-  Validates against approved list
-  Returns normalized currency code
+note top of ExchangeRateStorage
+  Handles loading and saving
+  exchange-rates.json locally.
+end note
+
+note top of LiveExchangeRateService
+  Fetches latest exchange rates
+  from the Frankfurter API.
 end note
 @enduml

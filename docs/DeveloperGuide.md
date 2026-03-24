@@ -26,13 +26,23 @@ The Transaction Manager follows a layered architecture with the following main c
 3. **TransactionsList**: Manages the collection of Transaction objects and provides CRUD operations.
 4. **Transaction**: Represents individual financial transactions with validation and data integrity.
 5. **Validators**: Utility classes (CurrencyValidator, TransactionType) that enforce business rules.
+6. **Storage**: Handles persistence of transactions to local file storage.
+6. **Currency Services**: Handles currency conversion and exchange rate management.
+    - `CurrencyConverter`
+    - `ExchangeRateData`
+    - `ExchangeRateStorage`
+    - `LiveExchangeRateService`
+
 
 The components interact as follows:
 - `Duke` creates and initializes `Parser` and `TransactionsList`.
 - `Parser` processes user commands and calls methods on `TransactionsList`.
 - `TransactionsList` manages `Transaction` objects and uses validators for data integrity.
 - `Transaction` objects encapsulate individual transaction data and validation logic.
-
+- `Storage` reads from and writes to local files.
+- `CurrencyConverter` performs currency conversion using exchange rate data.
+- `ExchangeRateStorage` loads and saves exchange rate data locally.
+- `LiveExchangeRateService` fetches real-time exchange rates from an external API.
 
 ### Design Considerations
 
@@ -51,7 +61,6 @@ The Parser component is responsible for:
 - Validating command syntax and arguments
 - Delegating operations to the TransactionsList component
 - Providing user feedback and error messages
-
 
 #### Transaction Management Component
 The TransactionsList component provides:
@@ -128,8 +137,150 @@ The following class diagram shows the relationships between all components:
 
 ![Class Diagram](./diagrams/ClassDiagram.png)
 
+### Storage Feature
+Implementer: JJ
+The storage feature is responsible for persisting transaction data to local file storage and restoring it upon application startup.
+---
+
+#### 1. Transaction Persistence
+The `Storage` class manages reading from and writing to a local text file (`ledger.txt`).
+* Transactions are saved in a tab-separated format
+* Each transaction includes ID, date, description, amount, type, and currency
+* Data is written immediately after every modifying operation (add, edit, delete, clear)
+
+This ensures:
+* Data durability across application runs
+* Minimal risk of data loss
+---
+
+#### 2. Loading Transactions
+Upon application startup, `Storage` loads all previously saved transactions into memory.
+* Reads file line-by-line
+* Parses each line into a `Transaction` object
+* Reconstructs transaction IDs and updates the auto-increment counter
+
+Invalid or malformed lines are safely ignored to prevent crashes.
+---
+
+#### 3. Data Encoding and Decoding
+To ensure file integrity, special characters are handled using escaping:
+* `\t` for tabs
+* `\n` for newlines
+* `\\` for backslashes
+  This prevents corruption of the file format when storing user input.
+---
+
+#### 4. Integration with TransactionsList
+The `TransactionsList` component interacts directly with `Storage`:
+* Calls `load()` during initialization
+* Calls `save()` after every modification
+
+This design ensures:
+* Separation of concerns between data management and persistence
+* Consistent synchronization between memory and disk
+---
+
+#### Design Considerations
+* **Immediate Persistence**: Data is saved after every operation to prevent loss
+* **Simple File Format**: Tab-delimited text allows easy debugging and readability
+* **Robustness**: Invalid data is safely handled without crashing the application
+* **Encapsulation**: Storage logic is isolated from business logic in `TransactionsList`
+
+#### Sequence Diagram
+![Storage Sequence Diagram](diagrams/StorageSequence.png)
+
+The diagram above shows:
+* `TransactionsList` triggering save operations
+* `Storage` writing transaction data to file 
+* Data being reloaded when the application starts
+---
+
 ### Currency Conversion Feature
 Implementer: JJ
+The currency conversion feature extends the system by introducing dynamic currency handling, persistent exchange rate storage, and real-time rate retrieval.
+---
+
+#### Integration with Architecture
+This feature introduces and integrates the following components:
+* `CurrencyConverter`: Core conversion logic
+* `ExchangeRateData`: Data model for exchange rates
+* `ExchangeRateStorage`: Handles persistent storage of exchange rates
+* `LiveExchangeRateService`: Fetches real-time exchange rates
+
+These components are connected as follows:
+* `Duke` initializes the converter and injects it into `Parser` and `TransactionsList`
+* `Parser` handles `convert` and `rates` commands
+* `TransactionsList` uses the converter for display-level conversions
+* `ExchangeRateStorage` ensures exchange rates persist across application runs
+---
+
+#### 1. Simple Currency Conversion
+The `CurrencyConverter` class provides the core conversion logic via the `convert()` method.
+* Validates currencies using `CurrencyValidator`
+* Converts via a base currency for consistency
+* Handles same-currency conversion as a no-op
+---
+
+#### 2. Exchange Rate Storage
+The `ExchangeRateStorage` component ensures exchange rate data is persisted locally.
+* Loads exchange rates from a JSON file at application startup
+* Saves updated rates after fetching from the API
+* Ensures data validity before reading or writing
+
+This allows the application to:
+* Avoid repeated API calls
+* Maintain functionality even without internet access
+---
+
+#### 3. Live Exchange Rate Integration
+The `LiveExchangeRateService` fetches real-time exchange rates from an external API.
+* Sends HTTP requests to retrieve latest rates
+* Parses JSON responses into `ExchangeRateData`
+* Updates local storage via `ExchangeRateStorage`
+* Triggered using the `rates refresh` command
+
+A fallback mechanism in `Duke` ensures the system remains functional if live data retrieval fails.
+---
+
+#### 4. Conversion of Stored Transactions
+Stored transactions can be converted dynamically without modifying underlying data.
+Implemented in:
+* `Parser` (`convert transaction` command)
+* `TransactionsList` (conversion during display)
+
+Features:
+* Converts a transaction by ID
+* Uses latest available exchange rates
+* Preserves original stored values
+---
+
+#### 5. Display Currency Conversion (List View)
+Transactions can be displayed in a selected currency using:
+```
+list transaction -to USD
+```
+
+* Uses `setDisplayCurrency()` and `setAutoConvertDisplay()`
+* Conversion is applied during output rendering
+* Does not overwrite stored transaction data
+---
+
+#### Design Considerations
+* **Separation of Concerns**: Conversion, storage, and API handling are modularized
+* **Persistence**: Exchange rates are stored locally to improve performance and reliability
+* **Non-destructive Operations**: All conversions are display-only
+* **Resilience**: Fallback data ensures continued functionality without API access
+
+#### Sequence Diagram
+![Convert Transaction Sequence Diagram](diagrams/ConvertTransactionSequence.png)
+
+The diagram above illustrates how user input flows through the system:
+* `Parser` extracts and validates inputs
+* `CurrencyValidator` ensures valid currencies
+* `CurrencyConverter` performs the conversion 
+* Results are displayed without modifying stored data
+---
+
 
 ### [Proposed] Improved Account Validation and Hierarchical Account Registry
 Implementer: Pran
@@ -153,6 +304,7 @@ The Transaction Manager is designed for:
 - **Students** learning about financial management
 - **Users comfortable with command-line interfaces**
 - **Those who prefer typing over mouse interactions**
+- **Users dealing with multiple currencies** who require quick and reliable currency conversion
 
 ### Value Proposition
 
@@ -161,17 +313,24 @@ The Transaction Manager solves several key problems:
 1. **Simplified Financial Tracking**: Provides a straightforward way to record and manage financial transactions without complex accounting software.
 2. **Rapid Data Entry**: Command-line interface allows for faster transaction entry compared to GUI applications for users comfortable with typing.
 3. **Portability**: Lightweight Java application that runs on any platform with Java 17+ installed.
+4. **Multi-Currency Support**: Enables users to convert between currencies and view transactions in different currencies without altering stored data.
+5. **Live Exchange Rates Integration**: Allows users to refresh and use up-to-date exchange rates for more accurate conversions.
 
 ### User Stories
 
 | Version | As a ... | I want to ...                              | So that I can ...                                                 |
-| ------- | -------- | ------------------------------------------ | ----------------------------------------------------------------- |
+|---------| -------- | ------------------------------------------ | ----------------------------------------------------------------- |
 | v1.0    | new user | see usage instructions                     | refer to them when I forget how to use the application            |
 | v1.0    | user     | add a new transaction                      | record my financial activities                                    |
 | v1.0    | user     | list all transactions                      | view my transaction history                                       |
 | v1.0    | user     | edit a transaction                         | correct mistakes in previously recorded transactions              |
 | v1.0    | user     | delete a transaction                       | remove erroneous or duplicate entries                             |
-| v1.0    | user     | clear all transactions                     | start fresh with a clean transaction list                         |
+| v1.0    | user     | have my transactions automatically saved   | avoid losing data between sessions                                |
+| v1.0    | user     | load previously saved transactions         | continue tracking finances across sessions                        |
+| v1.0    | user     | convert currencies                         | understand values across different currencies                     |
+| v1.0    | user     | convert a transaction to another currency  | quickly view equivalent values without modifying stored data      |
+| v1.0    | user     | view transactions in another currency      | compare spending consistently across currencies                   |
+| v1.0    | user     | refresh exchange rates                     | ensure conversion uses up-to-date rates                           |
 | v2.0    | user     | filter transactions by date                | review transactions from specific time periods                    |
 | v2.0    | user     | search transactions by description         | find specific transactions quickly                                |
 | v2.0    | user     | validate my transactions                   | ensure my double-entry accounts are balanced                      |
@@ -185,20 +344,20 @@ The Transaction Manager solves several key problems:
    - Application should not crash on invalid user input
    - Data should remain consistent during CRUD operations
    - Error messages should be helpful and actionable
+   - Exchange rate data should be validated before use
 
-2. **Usability**
+3. **Usability**
    - Command syntax should be intuitive and consistent
    - Help text should be accessible via a help command
    - Error messages should clearly indicate what went wrong and how to fix it
+   - Conversion commands should clearly distinguish between stored data and display-only values
 
 3. **Maintainability**
    - Code should follow Java coding standards
    - Comprehensive unit tests should cover critical functionality
    - Code should be well-documented with JavaDoc comments
    - Separation of concerns should be maintained between components
-
-
-
+    
 ## Glossary
 
 * **Transaction**: A financial record containing date, description, amount, type (debit/credit), and currency.
