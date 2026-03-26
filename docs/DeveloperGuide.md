@@ -9,8 +9,6 @@ This project is built on the Java platform and follows object-oriented design pr
 ## Additional Notes
 For JJ: modify the architecture below to add conversion
 
-For JJ and Chingy: add your parts (proposed and implemented)
-
 ## Design & Implementation
 
 ### Architecture
@@ -351,6 +349,94 @@ New internal state variables in `Parser`:
 
 #### Sequence Diagram
 ![Confirm Transaction Sequence Diagram](diagrams/ConfirmTransactionSequence.png)
+
+### Documentation and User Experience Improvements
+Implementer: Chingy
+
+This contribution focuses on enhancing the user experience through comprehensive documentation and implementing the help system to make the application more accessible to new users.
+
+---
+
+#### 1. User Guide Rewrite and Enhancement
+The User Guide was completely rewritten to provide comprehensive documentation for both new and experienced users.
+
+**Key Improvements:**
+* **Double-Entry Accounting Explanation**: Added beginner-friendly explanations of double-entry bookkeeping concepts including:
+  * The accounting equation (Assets = Liabilities + Equity)
+  * Debit vs. Credit fundamentals
+  * How transactions work in Ledger67
+  * Practical examples for different user scenarios
+
+* **Currency Conversion Documentation**: Added detailed documentation for all currency-related features:
+  * `convert` command for currency conversion
+  * `convert transaction` command for converting existing transactions
+  * `rates refresh` command for updating exchange rates
+  * Complete examples and expected outputs
+
+* **Command Reference Enhancement**: Updated the command summary table to include all new commands with clear formatting and examples.
+
+* **FAQ Section**: Added frequently asked questions to address common user concerns about:
+  * Data transfer between computers
+  * Difference between debit and credit
+  * Personal finance usage
+  * Supported currencies
+  * Double-entry system implementation
+
+---
+
+#### 2. Help Command Implementation
+Implemented a comprehensive help system within the application to provide immediate assistance to users.
+
+**Implementation Details:**
+* **Parser Integration**: Added `handleHelp()` method to the `Parser` class
+* **Command Structure**: Organized help output into logical sections:
+  * Available commands with clear numbering
+  * Format specifications for each command
+  * Practical examples for each command
+  * Additional information about data formats and constraints
+
+* **User-Friendly Output**: The help command displays:
+  * All 10 available commands with consistent formatting
+  * Required and optional parameters for each command
+  * Real-world usage examples
+  * Important notes about data storage and exchange rates
+
+**Technical Implementation:**
+```java
+private void handleHelp() {
+    System.out.println("=== Ledger67 Help ===");
+    System.out.println("Available commands:");
+    // ... command documentation
+}
+```
+
+---
+
+#### 3. Documentation Maintenance and Currency Feature Updates
+Ensured documentation stays current with evolving project features.
+
+**Accomplishments:**
+* **Real-time Updates**: Updated User Guide immediately after currency conversion features were merged
+* **Command Consistency**: Verified help command output matches actual implemented commands
+* **Build Integration**: Tested help functionality across different execution methods (Gradle run, JAR file)
+* **Team Collaboration**: Committed and pushed documentation updates to ensure team synchronization
+
+---
+
+#### Design Considerations
+* **Beginner-Friendly Approach**: Documentation written for users with no prior accounting knowledge
+* **Progressive Disclosure**: Basic concepts explained first, followed by advanced features
+* **Consistent Formatting**: All commands documented with the same structure for predictability
+* **Practical Examples**: Real-world scenarios provided for each command
+* **Accessibility**: Help available both in-app and via external documentation
+
+---
+
+#### Impact on User Experience
+* **Reduced Learning Curve**: New users can understand the application faster
+* **Immediate Assistance**: Users can get help without leaving the application
+* **Comprehensive Reference**: All features are properly documented
+* **Consistent Experience**: Documentation matches actual application behavior
 
 ### [Proposed] Improved Account Validation and Hierarchical Account Registry
 Implementer: Pran
