@@ -189,9 +189,10 @@ Transaction 3: 50.00 USD = 67.75 SGD
 ```
 **Note**
 - This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
+- To store the converted value, use the `confirm` command.
 
-### Converting All Listed Transactions: `list transaction -to`
-Converts all existing transactions to a different currency.
+### View Converted Values of All Listed Transactions: `list transaction -to`
+Views all existing transactions to a different currency.
 
 **Format**: `list transaction -to TARGET_CURRENCY`
 
@@ -209,6 +210,9 @@ ID: 2 | Date: 18/03/2026 | Desc: "Consulting fee received" | Amount: 500.00 | Ty
 ```
 **Note**
 - This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
+- To store conversions:
+    - Use `confirm all` to store all transactions
+    - Use `confirm ID` to store a specific transaction
 
 ### Refreshing Exchange Rates: `rates`
 Refreshes live exchange rates from external sources.
@@ -223,6 +227,85 @@ Output:
 ```
 Exchange rates refreshed successfully for 2026-03-19.
 ```
+
+### Confirming Converted Transactions: `confirm`
+
+After using conversion commands, Ledger67 allows you to **store the converted values permanently**.
+
+By default, all conversions are **view-only**. You must explicitly confirm to update the stored transaction(s).
+
+---
+
+#### 1. Confirming a Single Converted Transaction
+
+After using:
+
+```
+convert transaction ID -to TARGET_CURRENCY
+```
+
+You can store the converted result using:
+
+```
+confirm
+```
+
+**Example**:
+
+```
+convert transaction 3 -to SGD
+confirm
+```
+
+**Result**:
+
+* The transaction’s **amount** is updated to the converted value
+* The transaction’s **currency** is updated to the target currency
+* Changes are saved permanently
+
+---
+
+#### 2. Confirming Transactions from List View
+
+After using:
+
+```
+list transaction -to TARGET_CURRENCY
+```
+
+You can choose to store:
+
+##### a) All transactions
+
+```
+confirm all
+```
+
+##### b) A specific transaction
+
+```
+confirm ID
+```
+
+**Example**:
+
+```
+list transaction -to SGD
+confirm 2
+```
+
+---
+
+#### Important Notes
+
+* If you enter any command **other than `confirm`**, the conversion will be **ignored**
+* Confirmation updates:
+
+    * transaction **amount**
+    * transaction **currency**
+* Changes are **saved to storage immediately**
+
+---
 
 ### Getting Help: `help`
 Displays available commands and usage instructions.
@@ -269,6 +352,7 @@ help
 | **Convert Transaction**      | `convert transaction ID -to TARGET_CURRENCY`                         | Convert existing transaction      |
 | **Convert All Transactions** | `list transaction -to TARGET_CURRENCY`                               | Convert ALL existing transactions |
 | **Rates**                    | `rates refresh`                                                      | Refresh live exchange rates       |
+| **Confirm** | `confirm`, `confirm all`, `confirm ID` | Store converted transaction(s) |
 | **Help**                     | `help`                                                               | Show available commands           |
 | **Exit**                     | `exit`                                                               | Exit the application              |
 
@@ -279,7 +363,7 @@ help
 3. **Review Periodically**: Use the `list` command weekly or monthly to review your financial position.
 4. **Backup Important Data**: Since transactions are stored in memory, consider exporting or noting down important transactions.
 5. **Learn the Basics**: Understanding basic accounting principles will help you get the most out of Ledger67.
-
+6. **Currency Conversion**: Use the view and confirm feature efficiently to better manage multiple currencies,
 ---
 
 *Ledger67 - Simplifying double-entry accounting for everyone*

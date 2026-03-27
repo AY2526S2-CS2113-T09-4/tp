@@ -76,4 +76,22 @@ public class StorageTest {
         Assertions.assertNotNull(loadedList);
         Assertions.assertTrue(loadedList.isEmpty());
     }
+
+    @Test
+    public void testSaveAndLoadUpdatedConvertedTransaction() {
+        Storage storage = new Storage(TEST_FILE_PATH);
+
+        Transaction t = new Transaction("20/03/2023", "Book Purchase", 25.75, "debit", "USD");
+        t.update(null, null, 34.50, null, "SGD");
+
+        storage.save(List.of(t));
+        List<Transaction> loadedList = storage.load();
+
+        Assertions.assertEquals(1, loadedList.size());
+        Transaction loaded = loadedList.get(0);
+
+        Assertions.assertEquals(34.50, loaded.getAmount(), 0.0001);
+        Assertions.assertEquals("SGD", loaded.getCurrency());
+        Assertions.assertEquals("Book Purchase", loaded.getDescription());
+    }
 }

@@ -171,5 +171,6 @@ public class ParserTest {
         String output = outputStreamCaptor.toString();
         assertTrue(output.contains("=== Ledger67 Help ==="));
         assertTrue(output.contains("convert transaction"));
+        assertTrue(output.contains("confirm all"));
     }
 }

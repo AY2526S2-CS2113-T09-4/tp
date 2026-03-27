@@ -1,0 +1,47 @@
+@startuml
+skinparam backgroundColor #EEEBDC
+skinparam sequence {
+    ParticipantBackgroundColor #FFF
+    ActorBackgroundColor #FFF
+    LifeLineBackgroundColor #FFF
+}
+
+actor User
+participant "Duke" as Duke
+participant "Parser" as Parser
+participant "TransactionsList" as TransactionsList
+participant "CurrencyValidator" as CurrencyValidator
+participant "CurrencyConverter" as CurrencyConverter
+participant "ExchangeRateData" as ExchangeRateData
+
+User -> Duke : enters "convert transaction 3 -to SGD"
+Duke -> Parser : start()
+Parser -> Parser : processInput("convert transaction 3 -to SGD")
+Parser -> Parser : handleConvert("transaction 3 -to SGD")
+Parser -> Parser : handleConvertTransaction("3 -to SGD")
+Parser -> CurrencyValidator : validateAndGet("SGD")
+CurrencyValidator --> Parser : "SGD"
+
+Parser -> TransactionsList : getTransactionById(3)
+TransactionsList --> Parser : Transaction
+
+Parser -> CurrencyConverter : convert(amount, fromCurrency, "SGD")
+CurrencyConverter -> CurrencyValidator : validateAndGet(fromCurrency)
+CurrencyValidator --> CurrencyConverter : normalized source
+CurrencyConverter -> CurrencyValidator : validateAndGet("SGD")
+CurrencyValidator --> CurrencyConverter : normalized target
+CurrencyConverter -> ExchangeRateData : getRates(), getBase()
+ExchangeRateData --> CurrencyConverter : rates + base
+CurrencyConverter --> Parser : convertedAmount
+
+Parser -> System.out : print converted result
+Parser --> Duke : returns
+Duke --> User : displays "Transaction 3: ..."
+
+note over CurrencyConverter
+  Conversion is view-only by default.
+  User may confirm to persist changes.
+  Stored transaction values
+  remain unchanged.
+end note
+@enduml

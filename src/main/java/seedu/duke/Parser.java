@@ -20,6 +20,11 @@ public class Parser {
     private final ExchangeRateStorage exchangeRateStorage;
     private final LiveExchangeRateService liveExchangeRateService;
 
+    // Pending confirmation state
+    private Integer pendingTransactionId = null;
+    private String pendingTargetCurrency = null;
+    private boolean pendingFromListView = false;
+
     public Parser(TransactionsList list, CurrencyConverter converter,
                   ExchangeRateStorage exchangeRateStorage,
                   LiveExchangeRateService liveExchangeRateService) {
@@ -44,8 +49,18 @@ public class Parser {
             if (input.isEmpty()) {
                 continue;
             }
+
             try {
                 logger.log(Level.INFO, "Processing user input: " + input);
+
+                if (tryHandlePendingConfirmation(input)) {
+                    continue;
+                }
+
+                if (hasPendingConfirmation()) {
+                    clearPendingConfirmation();
+                }
+
                 processInput(input);
             } catch (Exception e) {
                 logger.log(Level.WARNING, "processing error", e);
@@ -53,6 +68,120 @@ public class Parser {
             }
         }
         scanner.close();
+    }
+
+    private boolean hasPendingConfirmation() {
+        return pendingTargetCurrency != null;
+    }
+
+    private void clearPendingConfirmation() {
+        pendingTransactionId = null;
+        pendingTargetCurrency = null;
+        pendingFromListView = false;
+    }
+
+    /**
+     * Handles:
+     * - confirm
+     * - confirm all
+     * - confirm ID
+     */
+    private boolean tryHandlePendingConfirmation(String input) {
+        if (!hasPendingConfirmation()) {
+            return false;
+        }
+
+        String trimmedInput = input.trim();
+        if (!trimmedInput.toLowerCase().startsWith("confirm")) {
+            return false;
+        }
+
+        String[] parts = trimmedInput.split("\\s+");
+
+        if (!pendingFromListView) {
+            if (parts.length != 1 || !parts[0].equalsIgnoreCase("confirm")) {
+                throw new IllegalArgumentException(
+                        "After 'convert transaction', use only 'confirm' to store the viewed transaction.");
+            }
+
+            confirmAndStoreConvertedTransaction(pendingTransactionId, pendingTargetCurrency);
+            clearPendingConfirmation();
+            return true;
+        }
+
+        if (parts.length == 2 && parts[1].equalsIgnoreCase("all")) {
+            confirmAndStoreAllDisplayedTransactions(pendingTargetCurrency);
+            clearPendingConfirmation();
+            return true;
+        }
+
+        if (parts.length == 2) {
+            int id;
+            try {
+                id = Integer.parseInt(parts[1]);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Transaction ID for confirm must be an integer.");
+            }
+
+            confirmAndStoreConvertedTransaction(id, pendingTargetCurrency);
+            clearPendingConfirmation();
+            return true;
+        }
+
+        throw new IllegalArgumentException(
+                "After 'list transaction -to ...', use 'confirm all' or 'confirm ID'.");
+    }
+
+    private void confirmAndStoreConvertedTransaction(int id, String targetCurrency) {
+        Transaction transaction = list.getTransactionById(id);
+        double convertedAmount = converter.convert(
+                transaction.getAmount(),
+                transaction.getCurrency(),
+                targetCurrency
+        );
+
+        list.editTransaction(id, null, null, convertedAmount, null, targetCurrency);
+
+        System.out.printf(
+                "Transaction %d confirmed and stored as %.2f %s.%n",
+                id,
+                convertedAmount,
+                targetCurrency
+        );
+    }
+
+    private void confirmAndStoreAllDisplayedTransactions(String targetCurrency) {
+        List<Transaction> transactions = list.getTransactions();
+
+        if (transactions.isEmpty()) {
+            System.out.println("No transactions available to confirm.");
+            return;
+        }
+
+        int updatedCount = 0;
+        for (Transaction transaction : transactions) {
+            double convertedAmount = converter.convert(
+                    transaction.getAmount(),
+                    transaction.getCurrency(),
+                    targetCurrency
+            );
+
+            list.editTransaction(
+                    transaction.getId(),
+                    null,
+                    null,
+                    convertedAmount,
+                    null,
+                    targetCurrency
+            );
+            updatedCount++;
+        }
+
+        System.out.printf(
+                "All %d transactions have been confirmed and stored in %s.%n",
+                updatedCount,
+                targetCurrency
+        );
     }
 
     private void processInput(String input) {
@@ -98,7 +227,6 @@ public class Parser {
             throw new IllegalArgumentException(
                 "Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.");
         }
-
     }
 
     private Map<String, String> parseArguments(String args) {
@@ -149,8 +277,24 @@ public class Parser {
             Map<String, String> map = parseArguments(args);
             String to = map.get("-to");
             if (to != null) {
+                to = CurrencyValidator.validateAndGet(to);
                 list.setDisplayCurrency(to);
                 list.setAutoConvertDisplay(true);
+                list.listTransactions();
+
+                if (!list.getTransactions().isEmpty()) {
+                    pendingTransactionId = null;
+                    pendingTargetCurrency = to;
+                    pendingFromListView = true;
+
+                    System.out.println();
+                    System.out.println("The displayed values are view-only by default.");
+                    System.out.println("Type 'confirm all' to store ALL transactions in " + to + ".");
+                    System.out.println("Type 'confirm ID' to store one displayed transaction in " + to + ".");
+                    System.out.println("Example: confirm 3");
+                    System.out.println("Enter any other command to ignore.");
+                }
+                return;
             } else {
                 list.setAutoConvertDisplay(false);
             }
@@ -158,6 +302,7 @@ public class Parser {
             list.setAutoConvertDisplay(false);
         }
 
+        clearPendingConfirmation();
         list.listTransactions();
     }
 
@@ -240,6 +385,7 @@ public class Parser {
 
         double result = converter.convert(amount, from, to);
 
+        clearPendingConfirmation();
         System.out.printf("%.2f %s = %.2f %s%n", amount, from, result, to);
     }
 
@@ -277,6 +423,14 @@ public class Parser {
                 result,
                 to
         );
+
+        pendingTransactionId = id;
+        pendingTargetCurrency = to;
+        pendingFromListView = false;
+
+        System.out.println("This converted value is view-only by default.");
+        System.out.println("Type 'confirm' to store this transaction in " + to + ".");
+        System.out.println("Enter any other command to ignore.");
     }
 
     private void handleRates(String args) {
@@ -311,7 +465,10 @@ public class Parser {
         System.out.println("3. list transaction -to CURRENCY - Display transactions with converted view values");
         System.out.println("   Format: list transaction -to CURRENCY");
         System.out.println("   Example: list transaction -to USD");
-        System.out.println("   Note: This is a view-mode feature only. It does NOT overwrite the stored transactions.");
+        System.out.println("   By default, this is a view-only feature.");
+        System.out.println("   To store all displayed conversions, use: confirm all");
+        System.out.println("   To store one displayed conversion, use: confirm ID");
+        System.out.println("   Example: confirm 3");
         System.out.println();
 
         System.out.println("4. edit - Modify an existing transaction");
@@ -337,19 +494,31 @@ public class Parser {
         System.out.println("8. convert transaction - Convert an existing transaction");
         System.out.println("   Format: convert transaction ID -to TARGET_CURRENCY");
         System.out.println("   Example: convert transaction 3 -to SGD");
-        System.out.println("   Note: This is a view-mode feature only. It does NOT modify the stored transaction.");
+        System.out.println("   By default, this is a view-mode feature only & won't modify the stored transaction.");
+        System.out.println("   To store the converted transaction, type: confirm");
         System.out.println();
 
-        System.out.println("9. rates - Refresh live exchange rates");
-        System.out.println("   Format: rates refresh");
+        System.out.println("9. confirm - Store viewed converted transaction(s)");
+        System.out.println("   After convert transaction ...");
+        System.out.println("   Format: confirm");
+        System.out.println();
+        System.out.println("   After list transaction -to ...");
+        System.out.println("   Format A: confirm all");
+        System.out.println("   Format B: confirm ID");
+        System.out.println("   Example: confirm all");
+        System.out.println("   Example: confirm 3");
         System.out.println();
 
-        System.out.println("10. help - Show this help message");
-        System.out.println("   Format: help");
+        System.out.println("10. rates - Refresh live exchange rates");
+        System.out.println("    Format: rates refresh");
         System.out.println();
 
-        System.out.println("11. exit - Exit the application");
-        System.out.println("   Format: exit");
+        System.out.println("11. help - Show this help message");
+        System.out.println("    Format: help");
+        System.out.println();
+
+        System.out.println("12. exit - Exit the application");
+        System.out.println("    Format: exit");
         System.out.println();
 
         System.out.println("=== Additional Information ===");
@@ -359,7 +528,8 @@ public class Parser {
         System.out.println("- ID is shown when using the 'list' command");
         System.out.println("- Transactions are stored locally on your machine");
         System.out.println("- Exchange rates are loaded from exchange-rates.json");
-        System.out.println("- Converted values shown by convert or list -to are display-only and are not stored");
+        System.out.println("- Converted values are view-only unless confirmed");
+        System.out.println("- Any command other than confirm will ignore the pending conversion");
         System.out.println();
         System.out.println("For detailed documentation, please refer to the User Guide.");
     }
