@@ -1,25 +1,167 @@
 Hello from
- ____        _        
-|  _ \ _   _| | _____ 
-| | | | | | | |/ / _ \
-| |_| | |_| |   <  __/
-|____/ \__,_|_|\_\___|
+ /$$                       /$$                                /$$$$$$  /$$$$$$$$
+| $$                      | $$                               /$$__  $$|_____ $$/
+| $$        /$$$$$$   /$$$$$$$  /$$$$$$   /$$$$$$   /$$$$$$ | $$  \/     /$$/
+| $$       /$$__  $$ /$$__  $$ /$$__  $$ /$$__  $$ /$$__  $$| $$$$$$$     /$$/
+| $$      | $$$$$$$$| $$  | $$| $$  \ $$| $$$$$$$$| $$  \/| $$__  $$   /$$/
+| $$      | $$_____/| $$  | $$| $$  | $$| $$_____/| $$      | $$  \ $$  /$$/
+| $$$$$$$$|  $$$$$$$|  $$$$$$$|  $$$$$$$|  $$$$$$$| $$      |  $$$$$$/ /$$/
+|________/ \_______/ \_______/ \____  $$ \_______/|__/       \______/ |__/
+                               /$$  \ $$
+                              |  $$$$$$/
+                               \______/
 
+=== Ledger67 Help ===
+Available commands:
+
+1. add - Add a new transaction
+   Format: add -d DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY
+   ASSETS = EQUITY - LIABILITIES + (INCOME - EXPENSES)
+   Each transaction must be balanced. This is checked by the system automatically.
+   Example: add -d 18/03/2026 -desc Office supplies -p "Assets -45.50" -p "Expenses 45.50" -c SGD
+
+2. list - Display all transactions
+   Format: list
+   Optional: list transaction -to CURRENCY
+   Example: list transaction -to USD
+
+3. list transaction -to CURRENCY - Display transactions with converted view values
+   Format: list transaction -to CURRENCY
+   Example: list transaction -to USD
+   By default, this is a view-only feature.
+   To store all displayed conversions, use: confirm all
+   To store one displayed conversion, use: confirm ID
+   Example: confirm 3
+
+4. edit - Modify an existing transaction
+   Format: edit ID [-d DATE] [-desc DESC] [-a AMOUNT] [-t TYPE] [-c CURRENCY]
+   Example: edit 1 -desc Updated description -a 50.00
+
+5. delete - Remove a transaction
+   Format: delete ID
+   Example: delete 3
+
+6. clear - Remove all transactions
+   Format: clear
+
+7. convert - Convert currencies
+   Format: convert -a AMOUNT -from SOURCE_CURRENCY -to TARGET_CURRENCY
+   Example: convert -a 100 -from USD -to SGD
+   Note: This is a view-mode feature only. It does NOT create or store a transaction.
+
+8. convert transaction - Convert an existing transaction
+   Format: convert transaction ID -to TARGET_CURRENCY
+   Example: convert transaction 3 -to SGD
+   By default, this is a view-mode feature only & won't modify the stored transaction.
+   To store the converted transaction, type: confirm
+
+9. confirm - Store viewed converted transaction(s)
+   After convert transaction ...
+   Format: confirm
+
+   After list transaction -to ...
+   Format A: confirm all
+   Format B: confirm ID
+   Example: confirm all
+   Example: confirm 3
+
+10. rates - Refresh live exchange rates
+    Format: rates refresh
+
+11. help - Show this help message
+    Format: help
+
+12. exit - Exit the application
+    Format: exit
+
+=== Additional Information ===
+- DATE format: DD/MM/YYYY (e.g., 18/03/2026)
+- TYPE must be either 'debit' or 'credit'
+- CURRENCY must be one of: SGD, USD, EUR
+- ID is shown when using the 'list' command
+- Transactions are stored locally on your machine
+- Exchange rates are loaded from exchange-rates.json
+- Converted values are view-only unless confirmed
+- Any command other than confirm will ignore the pending conversion
+
+For detailed documentation, please refer to the User Guide.
+Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
+Error: Error: At least one posting (-p) is required.
+Error: Error: At least one posting (-p) is required.
+Error: Invalid posting format. Use: -p "Account Amount"
+Error: Amount must be a valid number.
+Error: Transaction is unbalanced!
 Transaction added successfully.
 Transaction added successfully.
-Transaction added successfully.
-ID: 1 | Date: 15/03/2026 | Desc: Salary | Amount: 5000.00 | Type: credit | Currency: SGD
-ID: 2 | Date: 16/03/2026 | Desc: Lunch | Amount: 12.50 | Type: debit | Currency: USD
-ID: 3 | Date: 17/03/2026 | Desc: Groceries | Amount: 50.00 | Type: debit | Currency: EUR
-Transaction edited successfully.
-ID: 1 | Date: 15/03/2026 | Desc: Salary | Amount: 5000.00 | Type: credit | Currency: SGD
-ID: 2 | Date: 16/03/2026 | Desc: Lunch | Amount: 15.00 | Type: debit | Currency: SGD
-ID: 3 | Date: 17/03/2026 | Desc: Groceries | Amount: 50.00 | Type: debit | Currency: EUR
-Error: Type must be strictly 'debit' or 'credit'.
-Error: Currency must be one of: SGD, USD, EUR.
-Transaction deleted successfully.
-ID: 2 | Date: 16/03/2026 | Desc: Lunch | Amount: 15.00 | Type: debit | Currency: SGD
-ID: 3 | Date: 17/03/2026 | Desc: Groceries | Amount: 50.00 | Type: debit | Currency: EUR
+Error: Transaction is unbalanced!
+ID: 2 | Date: 19/03/2026 | Desc: Transaction 2 | [SGD]
+    Expenses                       :      50.00
+    Assets                         :     -50.00
+ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD]
+    Bank Account                   :     200.00
+    Sales                          :    -200.00
+Error: Missing arguments for convert.
+Error: Amount must be a valid number.
+100.00 SGD = 77.65 USD
+Error: Missing arguments for convert.
+Error: Transaction ID must be an integer.
+Error: Missing target currency.
+Error: Transaction ID not found.
+Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
+Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
+  Expenses                       :      50.00 SGD =      33.71 EUR
+  Assets                         :     -50.00 SGD =     -33.71 EUR
+This converted value is view-only by default.
+Type 'confirm' to store this transaction in EUR.
+Enter any other command to ignore.
+ID: 2 | Date: 19/03/2026 | Desc: Transaction 2 | [SGD]
+    Expenses                       :      50.00
+    Assets                         :     -50.00
+ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD]
+    Bank Account                   :     200.00
+    Sales                          :    -200.00
+Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
+ID: 2 | Date: 2026-03-19 | Desc: Transaction 2 | [SGD -> EUR]
+    Expenses                       :      50.00 | Display: 33.71 EUR
+    Assets                         :     -50.00 | Display: -33.71 EUR
+ID: 3 | Date: 2026-03-20 | Desc: Transaction 3 | [USD -> EUR]
+    Bank Account                   :     200.00 | Display: 173.66 EUR
+    Sales                          :    -200.00 | Display: -173.66 EUR
+
+The displayed values are view-only by default.
+Type 'confirm all' to store ALL transactions in EUR.
+Type 'confirm ID' to store one displayed transaction in EUR.
+Example: confirm 3
+Enter any other command to ignore.
+Error: After 'list transaction -to ...', use 'confirm all' or 'confirm ID'.
+Error: Transaction ID for confirm must be an integer.
+Transaction 2 confirmed and stored in EUR.
+ID: 2 | Date: 2026-03-19 | Desc: Transaction 2 | [EUR -> USD]
+    Expenses                       :      33.71 | Display: 38.83 USD
+    Assets                         :     -33.71 | Display: -38.83 USD
+ID: 3 | Date: 2026-03-20 | Desc: Transaction 3 | [USD -> USD]
+    Bank Account                   :     200.00 | Display: 200.00 USD
+    Sales                          :    -200.00 | Display: -200.00 USD
+
+The displayed values are view-only by default.
+Type 'confirm all' to store ALL transactions in USD.
+Type 'confirm ID' to store one displayed transaction in USD.
+Example: confirm 3
+Enter any other command to ignore.
+Transaction 2 confirmed and stored in USD.
+Transaction 3 confirmed and stored in USD.
+All 2 transactions have been confirmed and stored in USD.
+Error: Missing transaction ID to edit.
+Error: Transaction ID must be an integer.
+Error: No fields provided to edit.
+Error: Invalid posting format. Use: -p "Account Amount"
+Error: Transaction ID not found.
+Error: Missing transaction ID to delete.
+Error: Transaction ID must be an integer.
+Error: Transaction ID not found.
+Exchange rates refreshed successfully for 2026-03-27.
+Error: Unknown rates command. Use: rates refresh
+Exchange rates refreshed successfully for 2026-03-27.
 All transactions have been cleared.
 No transactions found.
 --- Transaction Manager Exited ---
