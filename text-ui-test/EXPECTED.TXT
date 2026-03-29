@@ -102,15 +102,15 @@ ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD]
     Sales                          :    -200.00
 Error: Missing arguments for convert.
 Error: Amount must be a valid number.
-100.00 SGD = 77.65 USD
+100.00 SGD = 74.66 USD
 Error: Missing arguments for convert.
 Error: Transaction ID must be an integer.
 Error: Missing target currency.
 Error: Transaction ID not found.
 Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
 Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
-  Expenses                       :      50.00 SGD =      33.71 EUR
-  Assets                         :     -50.00 SGD =     -33.71 EUR
+  Expenses                       :      50.00 SGD =      34.25 EUR
+  Assets                         :     -50.00 SGD =     -34.25 EUR
 This converted value is view-only by default.
 Type 'confirm' to store this transaction in EUR.
 Enter any other command to ignore.
@@ -122,11 +122,11 @@ ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD]
     Sales                          :    -200.00
 Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
 ID: 2 | Date: 2026-03-19 | Desc: Transaction 2 | [SGD -> EUR]
-    Expenses                       :      50.00 | Display: 33.71 EUR
-    Assets                         :     -50.00 | Display: -33.71 EUR
+    Expenses                       :      50.00 | Display: 34.25 EUR
+    Assets                         :     -50.00 | Display: -34.25 EUR
 ID: 3 | Date: 2026-03-20 | Desc: Transaction 3 | [USD -> EUR]
-    Bank Account                   :     200.00 | Display: 173.66 EUR
-    Sales                          :    -200.00 | Display: -173.66 EUR
+    Bank Account                   :     200.00 | Display: 183.49 EUR
+    Sales                          :    -200.00 | Display: -183.49 EUR
 
 The displayed values are view-only by default.
 Type 'confirm all' to store ALL transactions in EUR.
@@ -137,8 +137,8 @@ Error: After 'list transaction -to ...', use 'confirm all' or 'confirm ID'.
 Error: Transaction ID for confirm must be an integer.
 Transaction 2 confirmed and stored in EUR.
 ID: 2 | Date: 2026-03-19 | Desc: Transaction 2 | [EUR -> USD]
-    Expenses                       :      33.71 | Display: 38.83 USD
-    Assets                         :     -33.71 | Display: -38.83 USD
+    Expenses                       :      34.25 | Display: 37.33 USD
+    Assets                         :     -34.25 | Display: -37.33 USD
 ID: 3 | Date: 2026-03-20 | Desc: Transaction 3 | [USD -> USD]
     Bank Account                   :     200.00 | Display: 200.00 USD
     Sales                          :    -200.00 | Display: -200.00 USD
