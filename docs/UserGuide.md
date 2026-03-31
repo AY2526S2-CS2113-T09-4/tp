@@ -51,79 +51,82 @@ Double-entry bookkeeping is an accounting method where every financial transacti
 
 #### 1. The Accounting Equation
 ```
-Assets = Liabilities + Equity
+Assets = Equity - Liabilities +  (Income - Expenses)
 ```
 - **Assets**: What you own (cash, inventory, equipment)
 - **Liabilities**: What you owe (loans, accounts payable)
 - **Equity**: Your ownership interest in the business
+- **Income**: Money received in exchange for labor or the sale of products
+- **Expenses**: Cost of Operation
 
-#### 2. Debit vs. Credit
-- **Debit (Dr)**: An entry on the left side of an account
-- **Credit (Cr)**: An entry on the right side of an account
-
-#### 3. How Transactions Work in Ledger67
+#### 2. How Transactions Work in Ledger67
 In Ledger67, each transaction you record represents one side of a double-entry. The system automatically ensures that for every transaction you enter, there's an implied corresponding entry to maintain balance.
+
+Each transaction is a collection of `Postings`
+Postings are records of money going into each category (Assets, Liabilities, Equity, etc)
+These categories can have subcategories such as Assets:Cash or Liabilities:Loans
+These `Postings` must balance each other out.
 
 ### Example: Recording a Sale
 When you make a sale for $100 cash:
-- **Debit**: Cash account increases by $100 (asset increases)
-- **Credit**: Revenue account increases by $100 (equity increases)
+- `Assets:Cash` increases by $100
+- `Income` increases by $100
 
-In Ledger67, you would record this as a single transaction, and the system understands the double-entry implications.
+The equation is balanced and the transaction is valid. In Ledger67, you would record this as a single transaction, and the system understands the double-entry implications.
 
 ## Features
 
 ### Adding a Transaction: `add`
 Adds a new financial transaction to your ledger.
 
-**Format**: `add -d DATE -desc DESCRIPTION -a AMOUNT -t TYPE -c CURRENCY`
+**Format**: `add -d DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY`
 
-**Parameters**:
-- `-d DATE`: Transaction date in DD/MM/YYYY format (e.g., 18/03/2026)
-- `-desc DESCRIPTION`: Brief description of the transaction
-- `-a AMOUNT`: Transaction amount (positive number)
-- `-t TYPE`: Transaction type - either `debit` or `credit`
-- `-c CURRENCY`: Currency code - `SGD`, `USD`, or `EUR`
+### Parameters
+- `-d`: The date of the transaction (e.g., `DD/MM/YYYY`).
+- `-desc`: A brief description of the transaction.
+- `-p`: A posting containing an account name and an amount (enclosed in quotes). You must have at least two postings.
+- `-c`: The currency code (e.g., SGD, USD, EUR).
 
-**Examples**:
-```
-add -d 18/03/2026 -desc "Office supplies purchase" -a 45.50 -t debit -c SGD
-add -d 18/03/2026 -desc "Consulting fee received" -a 500.00 -t credit -c USD
+### Example
+```java
+add -d 18/03/2026 -desc "Office supplies" -p "Assets -45.50" -p "Expenses 45.50" -c SGD
 ```
 
 ### Listing All Transactions: `list`
 Displays all recorded transactions in chronological order.
-
-**Format**: `list`
-
-**Example**:
-```
+### Basic Format
+To view all transactions in their original currencies:
+```bash
 list
 ```
-Output:
-```
-ID: 1 | Date: 18/03/2026 | Desc: Office supplies purchase | Amount: 45.50 | Type: debit | Currency: SGD
-ID: 2 | Date: 18/03/2026 | Desc: Consulting fee received | Amount: 500.00 | Type: credit | Currency: USD
+
+### Example Output
+```text
+ID: 2 | Date: 2026-03-19 | Desc: Transaction 2 | [EUR]
+    Expenses                       :      34.25 
+    Assets                         :     -34.25 
+ID: 3 | Date: 2026-03-20 | Desc: Transaction 3 | [USD]
+    Bank Account                   :     200.00 
+    Sales                          :    -200.00 
 ```
 
 ### Editing a Transaction: `edit`
 Modifies an existing transaction.
 
-**Format**: `edit ID [FIELD_UPDATES]`
+**Format**: `edit ID [-d DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]`
 
 **Parameters**:
 - `ID`: The transaction ID to edit (shown in `list` command)
 - Field updates (any combination):
   - `-d NEW_DATE`: Update transaction date
   - `-desc NEW_DESCRIPTION`: Update description
-  - `-a NEW_AMOUNT`: Update amount
-  - `-t NEW_TYPE`: Update type (debit/credit)
+  - `-p POSTING`: New `Postings` that replaces old ones. At least 2. Transaction balance is checked.
   - `-c NEW_CURRENCY`: Update currency
 
 **Examples**:
 ```
-edit 1 -desc "Office stationery purchase" -a 47.25
-edit 2 -t debit -c EUR
+edit 1 -desc "Office stationery purchase" 
+edit 2 -c EUR
 ```
 
 ### Deleting a Transaction: `delete`

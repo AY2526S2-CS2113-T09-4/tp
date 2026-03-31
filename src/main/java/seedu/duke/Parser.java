@@ -495,7 +495,7 @@ public class Parser {
         System.out.println();
 
         System.out.println("4. edit - Modify an existing transaction");
-        System.out.println("   Format: edit ID [-d DATE] [-desc DESC] [-a AMOUNT] [-t TYPE] [-c CURRENCY]");
+        System.out.println("   Format: edit ID [-d DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]");
         System.out.println("   Example: edit 1 -desc Updated description -a 50.00");
         System.out.println();
 
