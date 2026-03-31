@@ -34,7 +34,7 @@ Available commands:
    Example: confirm 3
 
 4. edit - Modify an existing transaction
-   Format: edit ID [-d DATE] [-desc DESC] [-a AMOUNT] [-t TYPE] [-c CURRENCY]
+   Format: edit ID [-d DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]
    Example: edit 1 -desc Updated description -a 50.00
 
 5. delete - Remove a transaction
@@ -159,9 +159,9 @@ Error: Transaction ID not found.
 Error: Missing transaction ID to delete.
 Error: Transaction ID must be an integer.
 Error: Transaction ID not found.
-Exchange rates refreshed successfully for 2026-03-27.
+Exchange rates refreshed successfully for 2026-03-30.
 Error: Unknown rates command. Use: rates refresh
-Exchange rates refreshed successfully for 2026-03-27.
+Exchange rates refreshed successfully for 2026-03-30.
 All transactions have been cleared.
 No transactions found.
 --- Transaction Manager Exited ---
