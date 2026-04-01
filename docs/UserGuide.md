@@ -61,8 +61,6 @@ This allows accounts to be organised into categories and subcategories:
 
 This structure enables more powerful filtering and organisation of financial data.
 
-```
-
 ### Key Concepts for Beginners
 
 #### 1. The Accounting Equation
@@ -565,7 +563,6 @@ The CSV includes:
 - It does NOT modify any transactions
 - Currency conversion is **view-only**
 - Filtering may result in non-balanced views
-```
 
 ---
 

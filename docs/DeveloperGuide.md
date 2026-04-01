@@ -663,7 +663,7 @@ This feature is implemented across three main components:
 
 #### Core Logic
 The key method used is:
-```java
+
 public boolean isUnder(String parentAccount)
 
 #### Sequence Diagram
