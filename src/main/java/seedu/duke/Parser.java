@@ -1,5 +1,8 @@
 package seedu.duke;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,6 +11,9 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 /**
  * Reads command line inputs, checks for format validation, handles errors, and
@@ -27,8 +33,8 @@ public class Parser {
     private boolean pendingFromListView = false;
 
     public Parser(TransactionsList list, CurrencyConverter converter,
-                  ExchangeRateStorage exchangeRateStorage,
-                  LiveExchangeRateService liveExchangeRateService) {
+            ExchangeRateStorage exchangeRateStorage,
+            LiveExchangeRateService liveExchangeRateService) {
         assert list != null : "Parser requires a valid TransactionsList instance.";
         assert converter != null : "Parser requires a valid CurrencyConverter instance.";
         assert exchangeRateStorage != null : "Parser requires a valid ExchangeRateStorage instance.";
@@ -189,33 +195,33 @@ public class Parser {
         }
 
         switch (command) {
-        case "convert":
-            handleConvert(arguments);
-            break;
-        case "add":
-            handleAdd(arguments);
-            break;
-        case "list":
-            handleList(arguments);
-            break;
-        case "delete":
-            handleDelete(arguments);
-            break;
-        case "clear":
-            list.clearTransactions();
-            break;
-        case "edit":
-            handleEdit(arguments);
-            break;
-        case "rates":
-            handleRates(arguments);
-            break;
-        case "help":
-            handleHelp();
-            break;
-        default:
-            throw new IllegalArgumentException(
-                    "Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.");
+            case "convert":
+                handleConvert(arguments);
+                break;
+            case "add":
+                handleAdd(arguments);
+                break;
+            case "list":
+                handleList(arguments);
+                break;
+            case "delete":
+                handleDelete(arguments);
+                break;
+            case "clear":
+                list.clearTransactions();
+                break;
+            case "edit":
+                handleEdit(arguments);
+                break;
+            case "rates":
+                handleRates(arguments);
+                break;
+            case "help":
+                handleHelp();
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.");
         }
     }
 
@@ -277,6 +283,38 @@ public class Parser {
             }
         }
         return converted;
+    }
+
+    private static List<Transaction> filterTransactionsByDate(List<Transaction> transactions,
+            LocalDate beginDate,
+            LocalDate endDate) {
+        return transactions.stream()
+                .filter(t -> {
+                    LocalDate date = t.getDate();
+
+                    // If beginDate is null, it's always true.
+                    // Otherwise, check if date is NOT before beginDate (i.e., after or equal).
+                    boolean matchesBegin = (beginDate == null) || !date.isBefore(beginDate);
+
+                    // If endDate is null, it's always true.
+                    // Otherwise, check if date is NOT after endDate (i.e., before or equal).
+                    boolean matchesEnd = (endDate == null) || !date.isAfter(endDate);
+
+                    return matchesBegin && matchesEnd;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private static List<Transaction> filterTransactionsByRegex(List<Transaction> transactions,
+            String regexStr) {
+        try {
+            Pattern pattern = Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE);
+            return transactions.stream()
+                    .filter(t -> pattern.matcher(t.getDescription()).find())
+                    .collect(Collectors.toList());
+        } catch (PatternSyntaxException e) {
+            throw new IllegalArgumentException("Invalid Regex pattern: " + regexStr);
+        }
     }
 
     private void handleAdd(String args) {
@@ -346,16 +384,42 @@ public class Parser {
     }
 
     private void handleDelete(String args) {
-        if (args.isEmpty()) {
-            throw new IllegalArgumentException("Missing transaction ID to delete.");
+        Map<String, List<String>> map = parseArguments(args);
+        String beginString = getFirstElementFromMap(map, "-b");
+        LocalDate beginDate = null;
+        if(beginString != null){
+            beginDate = Transaction.parseDate(beginString);
         }
-        try {
-            int id = Integer.parseInt(args.split("\\s+")[0]);
-            list.deleteTransaction(id);
-            System.out.println("Transaction deleted successfully.");
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Transaction ID must be an integer.");
+        String endString = getFirstElementFromMap(map, "-e");
+        LocalDate endDate = null;
+        if(endString != null){
+            endDate = Transaction.parseDate(endString);
         }
+        String regex = getFirstElementFromMap(map, "-r");
+
+
+        // Retrieve all transactions (assuming list.getAllTransactions() exists)
+        List<Transaction> toDelete = new ArrayList<>(list.getTransactions());
+
+        // Apply filters
+        if (beginDate != LocalDate.MIN || endDate != LocalDate.MAX) {
+            toDelete = filterTransactionsByDate(toDelete, beginDate, endDate);
+        }
+        if (regex != null) {
+            toDelete = filterTransactionsByRegex(toDelete, regex);
+        }
+
+        if (toDelete.isEmpty()) {
+            System.out.println("No transactions found matching the specified criteria.");
+            return;
+        }
+
+        // Perform bulk deletion
+        for (Transaction t : toDelete) {
+            list.deleteTransaction(t.getId());
+        }
+
+        System.out.println("Successfully deleted " + toDelete.size() + " transaction(s) matching criteria.");
     }
 
     private void handleEdit(String args) {

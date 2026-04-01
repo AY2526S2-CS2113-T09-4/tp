@@ -129,7 +129,7 @@ public class ParserTest {
         String input = "delete transaction " + id + "\nexit";
         runParserWithInput(input);
 
-        assertTrue(outputStreamCaptor.toString().contains("Transaction deleted successfully."));
+        assertTrue(outputStreamCaptor.toString().contains("Successfully deleted"));
     }
 
     @Test

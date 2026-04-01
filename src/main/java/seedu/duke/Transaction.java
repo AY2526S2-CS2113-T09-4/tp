@@ -78,7 +78,7 @@ public class Transaction {
         }
     }
 
-    private LocalDate parseDate(String dateStr) {
+    public static LocalDate parseDate(String dateStr) {
         assert dateStr != null : "Date string cannot be null.";
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
