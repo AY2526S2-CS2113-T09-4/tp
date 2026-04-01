@@ -1,11 +1,15 @@
 package seedu.duke;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 /**
  * Stores and manages all transactions in memory, and saves them using Storage.
@@ -63,19 +67,51 @@ public class TransactionsList {
         return total;
     }
 
-    public List<Posting> filterByAccount(String accountPrefix) {
-        List<Posting> result = new ArrayList<>();
-
-        for (Transaction t : transactions) {
-            for (Posting p : t.getPostings()) {
-                if (p.getAccount().isUnder(accountPrefix)) {
-                    result.add(p);
-                }
-            }
+    public static List<Transaction> filterTransactionsByAccount(List<Transaction> transactions, String accountPrefix) {
+        if (accountPrefix == null){
+            return transactions;
         }
-
-        return result;
+        return transactions.stream()
+                .filter(t -> t.getPostings().stream()
+                        .anyMatch(p -> p.getAccount().isUnder(accountPrefix)))
+                .collect(Collectors.toList());
     }
+
+    public static List<Transaction> filterTransactionsByDate(List<Transaction> transactions,
+            LocalDate beginDate,
+            LocalDate endDate) {
+        return transactions.stream()
+                .filter(t -> {
+                    LocalDate date = t.getDate();
+
+                    // If beginDate is null, it's always true.
+                    // Otherwise, check if date is NOT before beginDate (i.e., after or equal).
+                    boolean matchesBegin = (beginDate == null) || !date.isBefore(beginDate);
+
+                    // If endDate is null, it's always true.
+                    // Otherwise, check if date is NOT after endDate (i.e., before or equal).
+                    boolean matchesEnd = (endDate == null) || !date.isAfter(endDate);
+
+                    return matchesBegin && matchesEnd;
+                })
+                .collect(Collectors.toList());
+    }
+
+    public static List<Transaction> filterTransactionsByRegex(List<Transaction> transactions,
+            String regexStr) {
+        if(regexStr == null){
+            return transactions;
+        }
+        try {
+            Pattern pattern = Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE);
+            return transactions.stream()
+                    .filter(t -> pattern.matcher(t.getDescription()).find())
+                    .collect(Collectors.toList());
+        } catch (PatternSyntaxException e) {
+            throw new IllegalArgumentException("Invalid Regex pattern: " + regexStr);
+        }
+    }
+
 
     public void listTransactions() {
         if (transactions.isEmpty()) {
@@ -113,6 +149,18 @@ public class TransactionsList {
         filteredTransactions.stream()
                 .sorted(Comparator.comparing(Transaction::getDate))
                 .forEach(transaction -> printFilteredTransaction(transaction, accountPrefix));
+    }
+    
+    public void renderTransactions(List<Transaction> filteredList) {
+        if (filteredList.isEmpty()) {
+            System.out.println("No matching transactions found.");
+            return;
+        }
+
+        filteredList.stream()
+                .sorted(Comparator.comparing(Transaction::getDate))
+                .forEach(this::printTransactionWithDisplayAmount);
+        // Reuse your existing printTransactionWithDisplayAmount method
     }
 
     private void printFilteredTransaction(Transaction transaction, String accountPrefix) {

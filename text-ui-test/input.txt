@@ -1,52 +1,29 @@
 help
 
-invalid_command
 
-add
-add -d 18/03/2026 -desc missing postings -c SGD
-add -d 18/03/2026 -desc invalid posting format -p "Assets" -c SGD
-add -d 18/03/2026 -desc invalid posting amount -p "Assets abc" -c SGD
-add -d 18/03/2026 -desc Transaction 1 -p "Assets:Cash 100" -p "Equity:Capital 100" -c SGD
-add -d 19/03/2026 -desc Transaction 2 -p "Expenses:General 50" -p "Assets:Cash -50" -c SGD
-add -d 20/03/2026 -desc Transaction 3 -p "Assets:Bank:Main 200" -p "Income:Sales 200" -c USD
-add -d 21/03/2026 -desc Transaction 4 -p "Assets:Cash 300" -p "Equity:Capital 300" -c EUR
+add -date 01/01/2026 -desc "Office Lunch" -p "Expenses:Food 15" -p "Assets:Cash -15" -c SGD
+add -date 05/01/2026 -desc "Steak Dinner" -p "Expenses:Food 50" -p "Assets:Cash -50" -c SGD
+add -date 10/01/2026 -desc "Taxi to Work" -p "Expenses:Transport 20" -p "Assets:Cash -20" -c SGD
+
+add -date 01/02/2026 -desc "Morning Coffee" -p "Expenses:Food 5" -p "Assets:Cash -5" -c SGD
+
+add -date 15/03/2026 -desc "Netflix" -p "Expenses:Entertainment 15" -p "Assets:Credit -15" -c USD
 
 list
+list -acc Expenses:Food
+list -begin 01/01/2026 -end 31/01/2026
+list -begin 01/01/2026 -end 31/01/2026 -acc Expenses:Food
+list -match Lunch -to USD
 
-balance
-balance -to EUR
-balance -acc Assets
-balance -acc Assets:Bank
-balance -acc Assets:Bank -to USD
-
-convert
-convert -a abc -from SGD -to USD
-convert -a 100 -from SGD -to USD
-
-convert transaction
-convert transaction abc -to USD
-convert transaction 1
-convert transaction 1 -to USD
-confirm all
-confirm
-
-convert transaction 2 -to EUR
-list
-confirm
 
 list -to EUR
-confirm
-confirm abc
-confirm 2
+confirm 1
+list
 
-list -to USD
+list -match Steak -to USD
 confirm all
 
-edit
-edit abc
-edit 1
-edit 1 -p "Assets"
-edit 1 -d 22/03/2026 -desc Edited Transaction 1 -p "Assets:Cash 150" -p "Equity:Capital 150" -c USD
+edit 1 -desc "Edited Office Lunch" -p "Expenses:Food 20" -p "Assets:Cash -20"
 
 balance
 balance -to USD
@@ -54,17 +31,16 @@ balance -acc Assets
 
 delete
 delete abc
-delete 4
+delete -match Coffee
 
-balance
-balance -acc Assets:Cash
+delete -match Steak
+list
 
-rates refresh
-rates update
-rates refresh
-
-clear
+delete -begin 01/01/2026 -end 15/01/2026
 list
 balance
 
+
+clear
+list
 exit

@@ -101,46 +101,48 @@ The equation is balanced and the transaction is valid. In Ledger67, you would re
 ### Adding a Transaction: `add`
 Adds a new financial transaction to your ledger.
 
-**Format**: `add -d DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY`
+**Format**: `add -date DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY`
 
 ### Parameters
-- `-d`: The date of the transaction (e.g., `DD/MM/YYYY`).
+- `-date`: The date of the transaction (e.g., `DD/MM/YYYY`).
 - `-desc`: A brief description of the transaction.
 - `-p`: A posting containing an account name and an amount (enclosed in quotes). You must have at least two postings.
 - `-c`: The currency code (e.g., SGD, USD, EUR).
 
 ### Example
 ```
-add -d 18/03/2026 -desc "Office supplies" -p "Assets:Cash -45.50" -p "Expenses:OfficeSupplies 45.50" -c SGD
+add -date 18/03/2026 -desc "Office supplies" -p "Assets:Cash -45.50" -p "Expenses:OfficeSupplies 45.50" -c SGD
 ```
 
-### Listing All Transactions: `list`
-Displays all recorded transactions in chronological order.
-### Basic Format
-To view all transactions in their original currencies:
-```bash
-list
-```
+### Listing and Filtering Transactions: `list`
+Displays recorded transactions. You can view all transactions or use filters to narrow down the results by date, account, keyword, or currency.
 
-### Example Output
-```text
-ID: 2 | Date: 2026-03-19 | Desc: Transaction 2 | [EUR]
-    Expenses                       :      34.25 
-    Assets                         :     -34.25 
-ID: 3 | Date: 2026-03-20 | Desc: Transaction 3 | [USD]
-    Bank Account                   :     200.00 
-    Sales                          :    -200.00 
-```
+**Format**: `list [-acc ACCOUNT] [-begin DATE] [-end DATE] [-match REGEX] [-to CURRENCY]`
+
+**Parameters**:
+- `-acc ACCOUNT`: Only show transactions containing this account (and only show that specific account's line).
+- `-begin DATE`: Show transactions on or after this date (DD/MM/YYYY).
+- `-end DATE`: Show transactions on or before this date (DD/MM/YYYY).
+- `-match REGEX`: Show transactions where the description matches the given keyword or regular expression.
+- `-to CURRENCY`: Display all values converted to a specific currency for viewing purposes.
+
+> **Note on Currency**: When using `-to`, the displayed values are **view-only**. To permanently save these converted values to your ledger, follow up with the `confirm` command.
+
+**Examples**:
+*   **View everything**: `list`
+*   **View January food expenses**: `list -acc Expenses:Food -begin 01/01/2026 -end 31/01/2026`
+*   **Search for any "Lunch" or "Dinner"**: `list -match "(Lunch|Dinner)"`
+*   **View all expenses in USD**: `list -acc Expenses -to USD`
 
 ### Editing a Transaction: `edit`
 Modifies an existing transaction.
 
-**Format**: `edit ID [-d DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]`
+**Format**: `edit ID [-date DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]`
 
 **Parameters**:
 - `ID`: The transaction ID to edit (shown in `list` command)
 - Field updates (any combination):
-  - `-d NEW_DATE`: Update transaction date
+  - `-date NEW_DATE`: Update transaction date
   - `-desc NEW_DESCRIPTION`: Update description
   - `-p POSTING`: New `Postings` that replaces old ones. At least 2. Transaction balance is checked.
   - `-c NEW_CURRENCY`: Update currency
@@ -151,18 +153,26 @@ edit 1 -desc "Office stationery purchase"
 edit 2 -c EUR
 ```
 
-### Deleting a Transaction: `delete`
-Removes a transaction from the ledger.
+### Deleting Transactions: `delete`
+Removes transactions from the ledger. You can delete a single transaction by its ID or remove multiple transactions at once using filters.
 
+#### Single Deletion
 **Format**: `delete ID`
+*   **Example**: `delete 3`
+
+#### Bulk Deletion
+**Format**: `delete [-begin DATE] [-end DATE] [-match REGEX] [-acc ACCOUNT]`
 
 **Parameters**:
-- `ID`: The transaction ID to delete
+- `-begin DATE`: Delete transactions starting from this date (DD/MM/YYYY).
+- `-end DATE`: Delete transactions up to this date (DD/MM/YYYY).
+- `-match REGEX`: Delete transactions matching a specific keyword/description.
+- `-acc ACCOUNT`: Delete transactions that involve a specific account.
 
-**Example**:
-```
-delete 3
-```
+**Examples**:
+*   **Delete by Keyword**: `delete -match Steak` (Removes all transactions with "Steak" in the description).
+*   **Delete by Date Range**: `delete -begin 01/01/2026 -end 15/01/2026` (Removes everything in the first half of January).
+*   **Layered Deletion**: `delete -acc Expenses:Entertainment -match Netflix` (Removes Netflix transactions specifically from that account).
 
 ### Clearing All Transactions: `clear`
 Removes all transactions from the ledger (use with caution!).

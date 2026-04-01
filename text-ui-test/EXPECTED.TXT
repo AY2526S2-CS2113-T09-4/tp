@@ -15,28 +15,22 @@ Hello from
 Available commands:
 
 1. add - Add a new transaction
-   Format: add -d DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY
+   Format: add -date DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY
    ASSETS = EQUITY - LIABILITIES + (INCOME - EXPENSES)
    Each transaction must be balanced. This is checked by the system automatically.
    Postings support hierarchical account names using ':'
    Examples: Assets:Cash, Assets:Bank:DBS, Expenses:Food, Income:Salary
-   Example: add -d 18/03/2026 -desc Office supplies -p "Assets:Cash -45.50" -p "Expenses:OfficeSupplies 45.50" -c SGD
+   Example: add -date 18/03/2026 -desc Office supplies -p "Assets:Cash -45.50" -p "Expenses:OfficeSupplies 45.50" -c SGD
 
-2. list - Display all transactions
-   Format: list
-   Optional A: list -to CURRENCY
-   Optional B: list -acc ACCOUNT
-   Optional C: list -acc ACCOUNT -to CURRENCY
-   Example: list -acc Assets
-   Example: list -acc Assets:Bank -to USD
+2. list - Display and filter transactions
+   Format: list [-acc ACCOUNT] [-begin DATE] [-end DATE] [-match REGEX] [-to CURRENCY]
+   - All flags are optional and can be combined (layered).
+   - Dates must be in DD/MM/YYYY format.
+   - Using -acc shows only postings for that account category.
+   Example (Layered): list -acc Expenses -begin 01/01/2026 -end 31/01/2026
+   Example (Regex):   list -match "(Lunch|Dinner)"
 
-3. list -acc ACCOUNT - Filter transactions by hierarchical account
-   Format: list -acc ACCOUNT
-   Example: list -acc Expenses
-   Example: list -acc Assets:Bank
-   Only postings under the given account category will be shown.
-
-4. list -to CURRENCY - Display transactions with converted view values
+3. list -to CURRENCY - Display transactions with converted view values
    Format: list -to CURRENCY
    Example: list -to USD
    By default, this is a view-only feature.
@@ -44,29 +38,33 @@ Available commands:
    To store one displayed conversion, use: confirm ID
    Example: confirm 3
 
-5. edit - Modify an existing transaction
-   Format: edit ID [-d DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]
+4. edit - Modify an existing transaction
+   Format: edit ID [-date DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]
    Example: edit 1 -desc Updated description -p "Expenses:Food 50" -p "Assets:Cash -50"
 
-6. delete - Remove a transaction
-   Format: delete ID
-   Example: delete 3
+5. delete - Remove a transaction
+   Format (Single): delete ID
+   Format (Bulk):   delete [-begin DATE] [-end DATE] [-match REGEX] [-acc ACCOUNT]
+   Note: Bulk deletion requires at least one filter flag.
+   Example (Single): delete 3
+   Example (Range):  delete -begin 01/01/2026 -end 15/01/2026
+   Example (Match):  delete -match Steak
 
-7. clear - Remove all transactions
+6. clear - Remove all transactions
    Format: clear
 
-8. convert - Convert currencies
+7. convert - Convert currencies
    Format: convert -a AMOUNT -from SOURCE_CURRENCY -to TARGET_CURRENCY
    Example: convert -a 100 -from USD -to SGD
    Note: This is a view-mode feature only. It does NOT create or store a transaction.
 
-9. convert transaction - Convert an existing transaction
+8. convert transaction - Convert an existing transaction
    Format: convert transaction ID -to TARGET_CURRENCY
    Example: convert transaction 3 -to SGD
    By default, this is a view-mode feature only & won't modify the stored transaction.
    To store the converted transaction, type: confirm
 
-10. confirm - Store viewed converted transaction(s)
+9. confirm - Store viewed converted transaction(s)
    After convert transaction ...
    Format: confirm
 
@@ -76,13 +74,13 @@ Available commands:
    Example: confirm all
    Example: confirm 3
 
-11. rates - Refresh live exchange rates
+10. rates - Refresh live exchange rates
     Format: rates refresh
 
-12. help - Show this help message
+11. help - Show this help message
     Format: help
 
-13. exit - Exit the application
+12. exit - Exit the application
     Format: exit
 
 14. balance - Generate Balance Sheet
@@ -106,31 +104,26 @@ Available commands:
 - Valid root account types are: Assets, Liabilities, Equity, Income, Expenses
 
 For detailed documentation, please refer to the User Guide.
-Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
-Error: Error: At least one posting (-p) is required.
-Error: Error: At least one posting (-p) is required.
-Error: Invalid posting format. Use: -p "Account Amount"
-Error: Amount must be a valid number.
 ===== BALANCE SHEET =====
 Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Cash                                       100.00
-  Total Assets                                    100.00
+  Assets:Cash                                       -15.00
+  Total Assets                                    -15.00
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    100.00
   Retained Earnings Breakdown
-  Current Period Net Income                         0.00
-  Total Equity                                    100.00
+    Expenses:Food                                     -15.00
+  Current Period Net Income                       -15.00
+  Total Equity                                    -15.00
 
 CHECK
-  Total Assets                                    100.00
-  Liabilities + Total Equity                      100.00
+  Total Assets                                    -15.00
+  Liabilities + Total Equity                      -15.00
   Equation Status                             PASS
 =========================
 Transaction added successfully.
@@ -139,22 +132,21 @@ Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Cash                                        50.00
-  Total Assets                                     50.00
+  Assets:Cash                                       -65.00
+  Total Assets                                    -65.00
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    100.00
   Retained Earnings Breakdown
-    Expenses:General                                  -50.00
-  Current Period Net Income                       -50.00
-  Total Equity                                     50.00
+    Expenses:Food                                     -65.00
+  Current Period Net Income                       -65.00
+  Total Equity                                    -65.00
 
 CHECK
-  Total Assets                                     50.00
-  Liabilities + Total Equity                       50.00
+  Total Assets                                    -65.00
+  Liabilities + Total Equity                      -65.00
   Equation Status                             PASS
 =========================
 Transaction added successfully.
@@ -163,24 +155,22 @@ Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                        50.00
-  Total Assets                                    250.00
+  Assets:Cash                                       -85.00
+  Total Assets                                    -85.00
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    100.00
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -50.00
-  Current Period Net Income                       150.00
-  Total Equity                                    250.00
+    Expenses:Food                                     -65.00
+    Expenses:Transport                                -20.00
+  Current Period Net Income                       -85.00
+  Total Equity                                    -85.00
 
 CHECK
-  Total Assets                                    250.00
-  Liabilities + Total Equity                      250.00
+  Total Assets                                    -85.00
+  Liabilities + Total Equity                      -85.00
   Equation Status                             PASS
 =========================
 Transaction added successfully.
@@ -189,267 +179,164 @@ Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       350.00
-  Total Assets                                    550.00
+  Assets:Cash                                       -90.00
+  Total Assets                                    -90.00
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    400.00
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -50.00
-  Current Period Net Income                       150.00
-  Total Equity                                    550.00
+    Expenses:Food                                     -70.00
+    Expenses:Transport                                -20.00
+  Current Period Net Income                       -90.00
+  Total Equity                                    -90.00
 
 CHECK
-  Total Assets                                    550.00
-  Liabilities + Total Equity                      550.00
+  Total Assets                                    -90.00
+  Liabilities + Total Equity                      -90.00
   Equation Status                             PASS
 =========================
 Transaction added successfully.
-ID: 1 | Date: 18/03/2026 | Desc: Transaction 1 | [SGD]
-    Assets:Cash                    :     100.00
-    Equity:Capital                 :     100.00
-ID: 2 | Date: 19/03/2026 | Desc: Transaction 2 | [SGD]
-    Expenses:General               :      50.00
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Cash                                       -90.00
+  Assets:Credit                                     -15.00
+  Total Assets                                   -105.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -70.00
+    Expenses:Transport                                -20.00
+  Current Period Net Income                      -105.00
+  Total Equity                                   -105.00
+
+CHECK
+  Total Assets                                   -105.00
+  Liabilities + Total Equity                     -105.00
+  Equation Status                             PASS
+=========================
+Transaction added successfully.
+ID: 1 | Date: 01/01/2026 | Desc: "Office Lunch" | [SGD]
+    Expenses:Food                  :      15.00
+    Assets:Cash                    :     -15.00
+ID: 2 | Date: 05/01/2026 | Desc: "Steak Dinner" | [SGD]
+    Expenses:Food                  :      50.00
     Assets:Cash                    :     -50.00
-ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD]
-    Assets:Bank:Main               :     200.00
-    Income:Sales                   :     200.00
-ID: 4 | Date: 21/03/2026 | Desc: Transaction 4 | [EUR]
-    Assets:Cash                    :     300.00
-    Equity:Capital                 :     300.00
-===== BALANCE SHEET =====
-Scope: ALL ACCOUNTS
-Report Currency: ORIGINAL TRANSACTION CURRENCIES
-
-ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       350.00
-  Total Assets                                    550.00
-
-LIABILITIES
-  Total Liabilities                                 0.00
-
-EQUITY
-  Equity:Capital                                    400.00
-  Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -50.00
-  Current Period Net Income                       150.00
-  Total Equity                                    550.00
-
-CHECK
-  Total Assets                                    550.00
-  Liabilities + Total Equity                      550.00
-  Equation Status                             PASS
-=========================
-===== BALANCE SHEET =====
-Scope: ALL ACCOUNTS
-Report Currency: EUR
-
-ASSETS
-  Assets:Bank:Main                                  183.49
-  Assets:Cash                                       334.25
-  Total Assets                                    517.73
-
-LIABILITIES
-  Total Liabilities                                 0.00
-
-EQUITY
-  Equity:Capital                                    368.49
-  Retained Earnings Breakdown
-    Income:Sales                                      183.49
-    Expenses:General                                  -34.25
-  Current Period Net Income                       149.24
-  Total Equity                                    517.73
-
-CHECK
-  Total Assets                                    517.73
-  Liabilities + Total Equity                      517.73
-  Equation Status                             PASS
-=========================
-===== BALANCE SHEET =====
-Scope: Assets
-Report Currency: ORIGINAL TRANSACTION CURRENCIES
-
-ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       350.00
-  Total Assets                                    550.00
-
-LIABILITIES
-  Total Liabilities                                 0.00
-
-EQUITY
-  Retained Earnings Breakdown
-  Current Period Net Income                         0.00
-  Total Equity                                      0.00
-
-CHECK
-  Total Assets                                    550.00
-  Liabilities + Total Equity                        0.00
-  Equation Status                             FILTERED VIEW (may not balance)
-=========================
-===== BALANCE SHEET =====
-Scope: Assets:Bank
-Report Currency: ORIGINAL TRANSACTION CURRENCIES
-
-ASSETS
-  Assets:Bank:Main                                  200.00
-  Total Assets                                    200.00
-
-LIABILITIES
-  Total Liabilities                                 0.00
-
-EQUITY
-  Retained Earnings Breakdown
-  Current Period Net Income                         0.00
-  Total Equity                                      0.00
-
-CHECK
-  Total Assets                                    200.00
-  Liabilities + Total Equity                        0.00
-  Equation Status                             FILTERED VIEW (may not balance)
-=========================
-===== BALANCE SHEET =====
-Scope: Assets:Bank
-Report Currency: USD
-
-ASSETS
-  Assets:Bank:Main                                  200.00
-  Total Assets                                    200.00
-
-LIABILITIES
-  Total Liabilities                                 0.00
-
-EQUITY
-  Retained Earnings Breakdown
-  Current Period Net Income                         0.00
-  Total Equity                                      0.00
-
-CHECK
-  Total Assets                                    200.00
-  Liabilities + Total Equity                        0.00
-  Equation Status                             FILTERED VIEW (may not balance)
-=========================
-Error: Missing arguments for convert.
-Error: Amount must be a valid number.
-100.00 SGD = 74.66 USD
-Error: Missing arguments for convert.
-Error: Transaction ID must be an integer.
-Error: Missing target currency.
-  Assets:Cash                    :     100.00 SGD =      74.66 USD
-  Equity:Capital                 :     100.00 SGD =      74.66 USD
-This converted value is view-only by default.
-Type 'confirm' to store this transaction in USD.
-Enter any other command to ignore.
-Error: After 'convert transaction', use only 'confirm' to store the viewed transaction.
-===== BALANCE SHEET =====
-Scope: ALL ACCOUNTS
-Report Currency: USD
-
-ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       364.33
-  Total Assets                                    564.33
-
-LIABILITIES
-  Total Liabilities                                 0.00
-
-EQUITY
-  Equity:Capital                                    401.66
-  Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    564.33
-
-CHECK
-  Total Assets                                    564.33
-  Liabilities + Total Equity                      564.33
-  Equation Status                             PASS
-=========================
-Transaction 1 confirmed and stored in USD.
-  Expenses:General               :      50.00 SGD =      34.25 EUR
-  Assets:Cash                    :     -50.00 SGD =     -34.25 EUR
-This converted value is view-only by default.
-Type 'confirm' to store this transaction in EUR.
-Enter any other command to ignore.
-ID: 1 | Date: 18/03/2026 | Desc: Transaction 1 | [USD]
-    Assets:Cash                    :      74.66
-    Equity:Capital                 :      74.66
-ID: 2 | Date: 19/03/2026 | Desc: Transaction 2 | [SGD]
-    Expenses:General               :      50.00
+ID: 3 | Date: 10/01/2026 | Desc: "Taxi to Work" | [SGD]
+    Expenses:Transport             :      20.00
+    Assets:Cash                    :     -20.00
+ID: 4 | Date: 01/02/2026 | Desc: "Morning Coffee" | [SGD]
+    Expenses:Food                  :       5.00
+    Assets:Cash                    :      -5.00
+ID: 5 | Date: 15/03/2026 | Desc: "Netflix" | [USD]
+    Expenses:Entertainment         :      15.00
+    Assets:Credit                  :     -15.00
+ID: 1 | Date: 01/01/2026 | Desc: "Office Lunch" | [SGD]
+    Expenses:Food                  :      15.00
+    Assets:Cash                    :     -15.00
+ID: 2 | Date: 05/01/2026 | Desc: "Steak Dinner" | [SGD]
+    Expenses:Food                  :      50.00
     Assets:Cash                    :     -50.00
-ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD]
-    Assets:Bank:Main               :     200.00
-    Income:Sales                   :     200.00
-ID: 4 | Date: 21/03/2026 | Desc: Transaction 4 | [EUR]
-    Assets:Cash                    :     300.00
-    Equity:Capital                 :     300.00
-Error: Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.
-ID: 1 | Date: 18/03/2026 | Desc: Transaction 1 | [USD -> EUR]
-    Assets:Cash                    :      74.66 | Display: 68.49 EUR
-    Equity:Capital                 :      74.66 | Display: 68.49 EUR
-ID: 2 | Date: 19/03/2026 | Desc: Transaction 2 | [SGD -> EUR]
-    Expenses:General               :      50.00 | Display: 34.25 EUR
+ID: 4 | Date: 01/02/2026 | Desc: "Morning Coffee" | [SGD]
+    Expenses:Food                  :       5.00
+    Assets:Cash                    :      -5.00
+ID: 1 | Date: 01/01/2026 | Desc: "Office Lunch" | [SGD]
+    Expenses:Food                  :      15.00
+    Assets:Cash                    :     -15.00
+ID: 2 | Date: 05/01/2026 | Desc: "Steak Dinner" | [SGD]
+    Expenses:Food                  :      50.00
+    Assets:Cash                    :     -50.00
+ID: 3 | Date: 10/01/2026 | Desc: "Taxi to Work" | [SGD]
+    Expenses:Transport             :      20.00
+    Assets:Cash                    :     -20.00
+ID: 1 | Date: 01/01/2026 | Desc: "Office Lunch" | [SGD]
+    Expenses:Food                  :      15.00
+    Assets:Cash                    :     -15.00
+ID: 2 | Date: 05/01/2026 | Desc: "Steak Dinner" | [SGD]
+    Expenses:Food                  :      50.00
+    Assets:Cash                    :     -50.00
+ID: 1 | Date: 01/01/2026 | Desc: "Office Lunch" | [SGD -> USD]
+    Expenses:Food                  :      15.00 | Display: 11.20 USD
+    Assets:Cash                    :     -15.00 | Display: -11.20 USD
+
+The displayed values are view-only by default.
+Type 'confirm all' to store ALL transactions in USD.
+Type 'confirm ID' to store one displayed transaction in USD.
+Example: confirm 3
+Enter any other command to ignore.
+ID: 1 | Date: 01/01/2026 | Desc: "Office Lunch" | [SGD -> EUR]
+    Expenses:Food                  :      15.00 | Display: 10.27 EUR
+    Assets:Cash                    :     -15.00 | Display: -10.27 EUR
+ID: 2 | Date: 05/01/2026 | Desc: "Steak Dinner" | [SGD -> EUR]
+    Expenses:Food                  :      50.00 | Display: 34.25 EUR
     Assets:Cash                    :     -50.00 | Display: -34.25 EUR
-ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD -> EUR]
-    Assets:Bank:Main               :     200.00 | Display: 183.49 EUR
-    Income:Sales                   :     200.00 | Display: 183.49 EUR
-ID: 4 | Date: 21/03/2026 | Desc: Transaction 4 | [EUR -> EUR]
-    Assets:Cash                    :     300.00 | Display: 300.00 EUR
-    Equity:Capital                 :     300.00 | Display: 300.00 EUR
+ID: 3 | Date: 10/01/2026 | Desc: "Taxi to Work" | [SGD -> EUR]
+    Expenses:Transport             :      20.00 | Display: 13.70 EUR
+    Assets:Cash                    :     -20.00 | Display: -13.70 EUR
+ID: 4 | Date: 01/02/2026 | Desc: "Morning Coffee" | [SGD -> EUR]
+    Expenses:Food                  :       5.00 | Display: 3.42 EUR
+    Assets:Cash                    :      -5.00 | Display: -3.42 EUR
+ID: 5 | Date: 15/03/2026 | Desc: "Netflix" | [USD -> EUR]
+    Expenses:Entertainment         :      15.00 | Display: 13.76 EUR
+    Assets:Credit                  :     -15.00 | Display: -13.76 EUR
 
 The displayed values are view-only by default.
 Type 'confirm all' to store ALL transactions in EUR.
 Type 'confirm ID' to store one displayed transaction in EUR.
 Example: confirm 3
 Enter any other command to ignore.
-Error: After 'list transaction -to ...', use 'confirm all' or 'confirm ID'.
-Error: Transaction ID for confirm must be an integer.
 ===== BALANCE SHEET =====
 Scope: ALL ACCOUNTS
 Report Currency: EUR
 
 ASSETS
-  Assets:Bank:Main                                  183.49
-  Assets:Cash                                       334.25
-  Total Assets                                    517.73
+  Assets:Cash                                       -61.64
+  Assets:Credit                                     -13.76
+  Total Assets                                    -75.41
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    368.49
   Retained Earnings Breakdown
-    Income:Sales                                      183.49
-    Expenses:General                                  -34.25
-  Current Period Net Income                       149.24
-  Total Equity                                    517.73
+    Expenses:Entertainment                            -13.76
+    Expenses:Food                                     -47.95
+    Expenses:Transport                                -13.70
+  Current Period Net Income                       -75.41
+  Total Equity                                    -75.41
 
 CHECK
-  Total Assets                                    517.73
-  Liabilities + Total Equity                      517.73
+  Total Assets                                    -75.41
+  Liabilities + Total Equity                      -75.41
   Equation Status                             PASS
 =========================
-Transaction 2 confirmed and stored in EUR.
-ID: 1 | Date: 18/03/2026 | Desc: Transaction 1 | [USD -> USD]
-    Assets:Cash                    :      74.66 | Display: 74.66 USD
-    Equity:Capital                 :      74.66 | Display: 74.66 USD
-ID: 2 | Date: 19/03/2026 | Desc: Transaction 2 | [EUR -> USD]
-    Expenses:General               :      34.25 | Display: 37.33 USD
-    Assets:Cash                    :     -34.25 | Display: -37.33 USD
-ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD -> USD]
-    Assets:Bank:Main               :     200.00 | Display: 200.00 USD
-    Income:Sales                   :     200.00 | Display: 200.00 USD
-ID: 4 | Date: 21/03/2026 | Desc: Transaction 4 | [EUR -> USD]
-    Assets:Cash                    :     300.00 | Display: 327.00 USD
-    Equity:Capital                 :     300.00 | Display: 327.00 USD
+Transaction 1 confirmed and stored in EUR.
+ID: 1 | Date: 01/01/2026 | Desc: "Office Lunch" | [EUR]
+    Expenses:Food                  :      10.27
+    Assets:Cash                    :     -10.27
+ID: 2 | Date: 05/01/2026 | Desc: "Steak Dinner" | [SGD]
+    Expenses:Food                  :      50.00
+    Assets:Cash                    :     -50.00
+ID: 3 | Date: 10/01/2026 | Desc: "Taxi to Work" | [SGD]
+    Expenses:Transport             :      20.00
+    Assets:Cash                    :     -20.00
+ID: 4 | Date: 01/02/2026 | Desc: "Morning Coffee" | [SGD]
+    Expenses:Food                  :       5.00
+    Assets:Cash                    :      -5.00
+ID: 5 | Date: 15/03/2026 | Desc: "Netflix" | [USD]
+    Expenses:Entertainment         :      15.00
+    Assets:Credit                  :     -15.00
+ID: 2 | Date: 05/01/2026 | Desc: "Steak Dinner" | [SGD -> USD]
+    Expenses:Food                  :      50.00 | Display: 37.33 USD
+    Assets:Cash                    :     -50.00 | Display: -37.33 USD
 
 The displayed values are view-only by default.
 Type 'confirm all' to store ALL transactions in USD.
@@ -461,24 +348,24 @@ Scope: ALL ACCOUNTS
 Report Currency: USD
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       364.33
-  Total Assets                                    564.33
+  Assets:Cash                                       -67.19
+  Assets:Credit                                     -15.00
+  Total Assets                                    -82.19
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    401.66
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    564.33
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -52.26
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -82.19
+  Total Equity                                    -82.19
 
 CHECK
-  Total Assets                                    564.33
-  Liabilities + Total Equity                      564.33
+  Total Assets                                    -82.19
+  Liabilities + Total Equity                      -82.19
   Equation Status                             PASS
 =========================
 Transaction 1 confirmed and stored in USD.
@@ -487,24 +374,24 @@ Scope: ALL ACCOUNTS
 Report Currency: USD
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       364.33
-  Total Assets                                    564.33
+  Assets:Cash                                       -67.19
+  Assets:Credit                                     -15.00
+  Total Assets                                    -82.19
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    401.66
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    564.33
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -52.26
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -82.19
+  Total Equity                                    -82.19
 
 CHECK
-  Total Assets                                    564.33
-  Liabilities + Total Equity                      564.33
+  Total Assets                                    -82.19
+  Liabilities + Total Equity                      -82.19
   Equation Status                             PASS
 =========================
 Transaction 2 confirmed and stored in USD.
@@ -513,24 +400,24 @@ Scope: ALL ACCOUNTS
 Report Currency: USD
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       364.33
-  Total Assets                                    564.33
+  Assets:Cash                                       -67.19
+  Assets:Credit                                     -15.00
+  Total Assets                                    -82.19
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    401.66
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    564.33
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -52.26
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -82.19
+  Total Equity                                    -82.19
 
 CHECK
-  Total Assets                                    564.33
-  Liabilities + Total Equity                      564.33
+  Total Assets                                    -82.19
+  Liabilities + Total Equity                      -82.19
   Equation Status                             PASS
 =========================
 Transaction 3 confirmed and stored in USD.
@@ -539,55 +426,77 @@ Scope: ALL ACCOUNTS
 Report Currency: USD
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       364.33
-  Total Assets                                    564.33
+  Assets:Cash                                       -67.19
+  Assets:Credit                                     -15.00
+  Total Assets                                    -82.19
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    401.66
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    564.33
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -52.26
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -82.19
+  Total Equity                                    -82.19
 
 CHECK
-  Total Assets                                    564.33
-  Liabilities + Total Equity                      564.33
+  Total Assets                                    -82.19
+  Liabilities + Total Equity                      -82.19
   Equation Status                             PASS
 =========================
 Transaction 4 confirmed and stored in USD.
-All 4 transactions have been confirmed and stored in USD.
-Error: Missing transaction ID to edit.
-Error: Transaction ID must be an integer.
-Error: No fields provided to edit.
-Error: Invalid posting format. Use: -p "Account Amount"
 ===== BALANCE SHEET =====
 Scope: ALL ACCOUNTS
 Report Currency: USD
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       439.67
-  Total Assets                                    639.67
+  Assets:Cash                                       -67.19
+  Assets:Credit                                     -15.00
+  Total Assets                                    -82.19
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    477.00
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    639.67
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -52.26
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -82.19
+  Total Equity                                    -82.19
 
 CHECK
-  Total Assets                                    639.67
-  Liabilities + Total Equity                      639.67
+  Total Assets                                    -82.19
+  Liabilities + Total Equity                      -82.19
+  Equation Status                             PASS
+=========================
+Transaction 5 confirmed and stored in USD.
+All 5 transactions have been confirmed and stored in USD.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Cash                                       -75.99
+  Assets:Credit                                     -15.00
+  Total Assets                                    -90.99
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -61.06
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -90.99
+  Total Equity                                    -90.99
+
+CHECK
+  Total Assets                                    -90.99
+  Liabilities + Total Equity                      -90.99
   Equation Status                             PASS
 =========================
 Transaction edited successfully.
@@ -596,24 +505,24 @@ Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       439.67
-  Total Assets                                    639.67
+  Assets:Cash                                       -75.99
+  Assets:Credit                                     -15.00
+  Total Assets                                    -90.99
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    477.00
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    639.67
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -61.06
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -90.99
+  Total Equity                                    -90.99
 
 CHECK
-  Total Assets                                    639.67
-  Liabilities + Total Equity                      639.67
+  Total Assets                                    -90.99
+  Liabilities + Total Equity                      -90.99
   Equation Status                             PASS
 =========================
 ===== BALANCE SHEET =====
@@ -621,24 +530,24 @@ Scope: ALL ACCOUNTS
 Report Currency: USD
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       439.67
-  Total Assets                                    639.67
+  Assets:Cash                                       -75.99
+  Assets:Credit                                     -15.00
+  Total Assets                                    -90.99
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    477.00
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    639.67
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -61.06
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -90.99
+  Total Equity                                    -90.99
 
 CHECK
-  Total Assets                                    639.67
-  Liabilities + Total Equity                      639.67
+  Total Assets                                    -90.99
+  Liabilities + Total Equity                      -90.99
   Equation Status                             PASS
 =========================
 ===== BALANCE SHEET =====
@@ -646,9 +555,9 @@ Scope: Assets
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       439.67
-  Total Assets                                    639.67
+  Assets:Cash                                       -75.99
+  Assets:Credit                                     -15.00
+  Total Assets                                    -90.99
 
 LIABILITIES
   Total Liabilities                                 0.00
@@ -659,87 +568,145 @@ EQUITY
   Total Equity                                      0.00
 
 CHECK
-  Total Assets                                    639.67
+  Total Assets                                    -90.99
   Liabilities + Total Equity                        0.00
   Equation Status                             FILTERED VIEW (may not balance)
 =========================
-Error: Missing transaction ID to delete.
-Error: Transaction ID must be an integer.
+Error: Missing transaction ID or filter flags to delete.
+Error: No valid filters provided. Use -begin, -end, or -match.
 ===== BALANCE SHEET =====
 Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       112.67
-  Total Assets                                    312.67
+  Assets:Cash                                       -72.26
+  Assets:Credit                                     -15.00
+  Total Assets                                    -87.26
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    150.00
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    312.67
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -57.33
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -87.26
+  Total Equity                                    -87.26
 
 CHECK
-  Total Assets                                    312.67
-  Liabilities + Total Equity                      312.67
+  Total Assets                                    -87.26
+  Liabilities + Total Equity                      -87.26
   Equation Status                             PASS
 =========================
-Transaction deleted successfully.
+Successfully deleted 1 transaction(s) matching criteria.
 ===== BALANCE SHEET =====
 Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Bank:Main                                  200.00
-  Assets:Cash                                       112.67
-  Total Assets                                    312.67
+  Assets:Cash                                       -34.93
+  Assets:Credit                                     -15.00
+  Total Assets                                    -49.93
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
-  Equity:Capital                                    150.00
   Retained Earnings Breakdown
-    Income:Sales                                      200.00
-    Expenses:General                                  -37.33
-  Current Period Net Income                       162.67
-  Total Equity                                    312.67
+    Expenses:Entertainment                            -15.00
+    Expenses:Food                                     -20.00
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -49.93
+  Total Equity                                    -49.93
 
 CHECK
-  Total Assets                                    312.67
-  Liabilities + Total Equity                      312.67
+  Total Assets                                    -49.93
+  Liabilities + Total Equity                      -49.93
   Equation Status                             PASS
 =========================
+Successfully deleted 1 transaction(s) matching criteria.
+ID: 1 | Date: 01/01/2026 | Desc: "Edited Office Lunch" | [USD]
+    Expenses:Food                  :      20.00
+    Assets:Cash                    :     -20.00
+ID: 3 | Date: 10/01/2026 | Desc: "Taxi to Work" | [USD]
+    Expenses:Transport             :      14.93
+    Assets:Cash                    :     -14.93
+ID: 5 | Date: 15/03/2026 | Desc: "Netflix" | [USD]
+    Expenses:Entertainment         :      15.00
+    Assets:Credit                  :     -15.00
 ===== BALANCE SHEET =====
-Scope: Assets:Cash
+Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
 
 ASSETS
-  Assets:Cash                                       112.67
-  Total Assets                                    112.67
+  Assets:Cash                                       -14.93
+  Assets:Credit                                     -15.00
+  Total Assets                                    -29.93
 
 LIABILITIES
   Total Liabilities                                 0.00
 
 EQUITY
   Retained Earnings Breakdown
-  Current Period Net Income                         0.00
-  Total Equity                                      0.00
+    Expenses:Entertainment                            -15.00
+    Expenses:Transport                                -14.93
+  Current Period Net Income                       -29.93
+  Total Equity                                    -29.93
 
 CHECK
-  Total Assets                                    112.67
-  Liabilities + Total Equity                        0.00
-  Equation Status                             FILTERED VIEW (may not balance)
+  Total Assets                                    -29.93
+  Liabilities + Total Equity                      -29.93
+  Equation Status                             PASS
 =========================
-Exchange rates refreshed successfully for 2026-03-31.
-Error: Unknown rates command. Use: rates refresh
-Exchange rates refreshed successfully for 2026-03-31.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Credit                                     -15.00
+  Total Assets                                    -15.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+    Expenses:Entertainment                            -15.00
+  Current Period Net Income                       -15.00
+  Total Equity                                    -15.00
+
+CHECK
+  Total Assets                                    -15.00
+  Liabilities + Total Equity                      -15.00
+  Equation Status                             PASS
+=========================
+Successfully deleted 2 transaction(s) matching criteria.
+ID: 5 | Date: 15/03/2026 | Desc: "Netflix" | [USD]
+    Expenses:Entertainment         :      15.00
+    Assets:Credit                  :     -15.00
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Credit                                     -15.00
+  Total Assets                                    -15.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+    Expenses:Entertainment                            -15.00
+  Current Period Net Income                       -15.00
+  Total Equity                                    -15.00
+
+CHECK
+  Total Assets                                    -15.00
+  Liabilities + Total Equity                      -15.00
+  Equation Status                             PASS
+=========================
 ===== BALANCE SHEET =====
 Scope: ALL ACCOUNTS
 Report Currency: ORIGINAL TRANSACTION CURRENCIES
@@ -761,25 +728,5 @@ CHECK
   Equation Status                             PASS
 =========================
 All transactions have been cleared.
-No transactions found.
-===== BALANCE SHEET =====
-Scope: ALL ACCOUNTS
-Report Currency: ORIGINAL TRANSACTION CURRENCIES
-
-ASSETS
-  Total Assets                                      0.00
-
-LIABILITIES
-  Total Liabilities                                 0.00
-
-EQUITY
-  Retained Earnings Breakdown
-  Current Period Net Income                         0.00
-  Total Equity                                      0.00
-
-CHECK
-  Total Assets                                      0.00
-  Liabilities + Total Equity                        0.00
-  Equation Status                             PASS
-=========================
+No matching transactions found.
 --- Transaction Manager Exited ---
