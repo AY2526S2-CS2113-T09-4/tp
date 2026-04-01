@@ -1,0 +1,12 @@
+Balance Sheet
+Scope,ALL ACCOUNTS
+Report Currency,ORIGINAL TRANSACTION CURRENCIES
+
+Section,Account,Amount
+Assets,Total Assets,0.00
+Liabilities,Total Liabilities,0.00
+Equity,Current Period Net Income,0.00
+Equity,Total Equity,0.00
+
+Check,Total Assets,0.00
+Check,Liabilities + Total Equity,0.00

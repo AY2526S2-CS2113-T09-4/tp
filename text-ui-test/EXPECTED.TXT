@@ -85,6 +85,14 @@ Available commands:
 13. exit - Exit the application
     Format: exit
 
+14. balance - Generate Balance Sheet
+    Format: balance
+    Optional A: balance -to CURRENCY
+    Optional B: balance -acc ACCOUNT
+    Optional C: balance -acc ACCOUNT -to CURRENCY
+    Example: balance -to USD
+    Example: balance -acc Assets:Bank
+
 === Additional Information ===
 - DATE format: DD/MM/YYYY (e.g., 18/03/2026)
 - CURRENCY must be one of: SGD, USD, EUR
@@ -103,9 +111,104 @@ Error: Error: At least one posting (-p) is required.
 Error: Error: At least one posting (-p) is required.
 Error: Invalid posting format. Use: -p "Account Amount"
 Error: Amount must be a valid number.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Cash                                       100.00
+  Total Assets                                    100.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    100.00
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                    100.00
+
+CHECK
+  Total Assets                                    100.00
+  Liabilities + Total Equity                      100.00
+  Equation Status                             PASS
+=========================
 Transaction added successfully.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Cash                                        50.00
+  Total Assets                                     50.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    100.00
+  Retained Earnings Breakdown
+    Expenses:General                                  -50.00
+  Current Period Net Income                       -50.00
+  Total Equity                                     50.00
+
+CHECK
+  Total Assets                                     50.00
+  Liabilities + Total Equity                       50.00
+  Equation Status                             PASS
+=========================
 Transaction added successfully.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                        50.00
+  Total Assets                                    250.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    100.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -50.00
+  Current Period Net Income                       150.00
+  Total Equity                                    250.00
+
+CHECK
+  Total Assets                                    250.00
+  Liabilities + Total Equity                      250.00
+  Equation Status                             PASS
+=========================
 Transaction added successfully.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       350.00
+  Total Assets                                    550.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    400.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -50.00
+  Current Period Net Income                       150.00
+  Total Equity                                    550.00
+
+CHECK
+  Total Assets                                    550.00
+  Liabilities + Total Equity                      550.00
+  Equation Status                             PASS
+=========================
 Transaction added successfully.
 ID: 1 | Date: 18/03/2026 | Desc: Transaction 1 | [SGD]
     Assets:Cash                    :     100.00
@@ -119,6 +222,120 @@ ID: 3 | Date: 20/03/2026 | Desc: Transaction 3 | [USD]
 ID: 4 | Date: 21/03/2026 | Desc: Transaction 4 | [EUR]
     Assets:Cash                    :     300.00
     Equity:Capital                 :     300.00
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       350.00
+  Total Assets                                    550.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    400.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -50.00
+  Current Period Net Income                       150.00
+  Total Equity                                    550.00
+
+CHECK
+  Total Assets                                    550.00
+  Liabilities + Total Equity                      550.00
+  Equation Status                             PASS
+=========================
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: EUR
+
+ASSETS
+  Assets:Bank:Main                                  183.49
+  Assets:Cash                                       334.25
+  Total Assets                                    517.73
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    368.49
+  Retained Earnings Breakdown
+    Income:Sales                                      183.49
+    Expenses:General                                  -34.25
+  Current Period Net Income                       149.24
+  Total Equity                                    517.73
+
+CHECK
+  Total Assets                                    517.73
+  Liabilities + Total Equity                      517.73
+  Equation Status                             PASS
+=========================
+===== BALANCE SHEET =====
+Scope: Assets
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       350.00
+  Total Assets                                    550.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                      0.00
+
+CHECK
+  Total Assets                                    550.00
+  Liabilities + Total Equity                        0.00
+  Equation Status                             FILTERED VIEW (may not balance)
+=========================
+===== BALANCE SHEET =====
+Scope: Assets:Bank
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Total Assets                                    200.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                      0.00
+
+CHECK
+  Total Assets                                    200.00
+  Liabilities + Total Equity                        0.00
+  Equation Status                             FILTERED VIEW (may not balance)
+=========================
+===== BALANCE SHEET =====
+Scope: Assets:Bank
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Total Assets                                    200.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                      0.00
+
+CHECK
+  Total Assets                                    200.00
+  Liabilities + Total Equity                        0.00
+  Equation Status                             FILTERED VIEW (may not balance)
+=========================
 Error: Missing arguments for convert.
 Error: Amount must be a valid number.
 100.00 SGD = 74.66 USD
@@ -131,6 +348,31 @@ This converted value is view-only by default.
 Type 'confirm' to store this transaction in USD.
 Enter any other command to ignore.
 Error: After 'convert transaction', use only 'confirm' to store the viewed transaction.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       364.33
+  Total Assets                                    564.33
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    401.66
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    564.33
+
+CHECK
+  Total Assets                                    564.33
+  Liabilities + Total Equity                      564.33
+  Equation Status                             PASS
+=========================
 Transaction 1 confirmed and stored in USD.
   Expenses:General               :      50.00 SGD =      34.25 EUR
   Assets:Cash                    :     -50.00 SGD =     -34.25 EUR
@@ -170,6 +412,31 @@ Example: confirm 3
 Enter any other command to ignore.
 Error: After 'list transaction -to ...', use 'confirm all' or 'confirm ID'.
 Error: Transaction ID for confirm must be an integer.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: EUR
+
+ASSETS
+  Assets:Bank:Main                                  183.49
+  Assets:Cash                                       334.25
+  Total Assets                                    517.73
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    368.49
+  Retained Earnings Breakdown
+    Income:Sales                                      183.49
+    Expenses:General                                  -34.25
+  Current Period Net Income                       149.24
+  Total Equity                                    517.73
+
+CHECK
+  Total Assets                                    517.73
+  Liabilities + Total Equity                      517.73
+  Equation Status                             PASS
+=========================
 Transaction 2 confirmed and stored in EUR.
 ID: 1 | Date: 18/03/2026 | Desc: Transaction 1 | [USD -> USD]
     Assets:Cash                    :      74.66 | Display: 74.66 USD
@@ -189,22 +456,330 @@ Type 'confirm all' to store ALL transactions in USD.
 Type 'confirm ID' to store one displayed transaction in USD.
 Example: confirm 3
 Enter any other command to ignore.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       364.33
+  Total Assets                                    564.33
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    401.66
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    564.33
+
+CHECK
+  Total Assets                                    564.33
+  Liabilities + Total Equity                      564.33
+  Equation Status                             PASS
+=========================
 Transaction 1 confirmed and stored in USD.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       364.33
+  Total Assets                                    564.33
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    401.66
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    564.33
+
+CHECK
+  Total Assets                                    564.33
+  Liabilities + Total Equity                      564.33
+  Equation Status                             PASS
+=========================
 Transaction 2 confirmed and stored in USD.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       364.33
+  Total Assets                                    564.33
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    401.66
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    564.33
+
+CHECK
+  Total Assets                                    564.33
+  Liabilities + Total Equity                      564.33
+  Equation Status                             PASS
+=========================
 Transaction 3 confirmed and stored in USD.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       364.33
+  Total Assets                                    564.33
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    401.66
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    564.33
+
+CHECK
+  Total Assets                                    564.33
+  Liabilities + Total Equity                      564.33
+  Equation Status                             PASS
+=========================
 Transaction 4 confirmed and stored in USD.
 All 4 transactions have been confirmed and stored in USD.
 Error: Missing transaction ID to edit.
 Error: Transaction ID must be an integer.
 Error: No fields provided to edit.
 Error: Invalid posting format. Use: -p "Account Amount"
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       439.67
+  Total Assets                                    639.67
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    477.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    639.67
+
+CHECK
+  Total Assets                                    639.67
+  Liabilities + Total Equity                      639.67
+  Equation Status                             PASS
+=========================
 Transaction edited successfully.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       439.67
+  Total Assets                                    639.67
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    477.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    639.67
+
+CHECK
+  Total Assets                                    639.67
+  Liabilities + Total Equity                      639.67
+  Equation Status                             PASS
+=========================
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: USD
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       439.67
+  Total Assets                                    639.67
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    477.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    639.67
+
+CHECK
+  Total Assets                                    639.67
+  Liabilities + Total Equity                      639.67
+  Equation Status                             PASS
+=========================
+===== BALANCE SHEET =====
+Scope: Assets
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       439.67
+  Total Assets                                    639.67
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                      0.00
+
+CHECK
+  Total Assets                                    639.67
+  Liabilities + Total Equity                        0.00
+  Equation Status                             FILTERED VIEW (may not balance)
+=========================
 Error: Missing transaction ID to delete.
 Error: Transaction ID must be an integer.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       112.67
+  Total Assets                                    312.67
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    150.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    312.67
+
+CHECK
+  Total Assets                                    312.67
+  Liabilities + Total Equity                      312.67
+  Equation Status                             PASS
+=========================
 Transaction deleted successfully.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Bank:Main                                  200.00
+  Assets:Cash                                       112.67
+  Total Assets                                    312.67
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Equity:Capital                                    150.00
+  Retained Earnings Breakdown
+    Income:Sales                                      200.00
+    Expenses:General                                  -37.33
+  Current Period Net Income                       162.67
+  Total Equity                                    312.67
+
+CHECK
+  Total Assets                                    312.67
+  Liabilities + Total Equity                      312.67
+  Equation Status                             PASS
+=========================
+===== BALANCE SHEET =====
+Scope: Assets:Cash
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Assets:Cash                                       112.67
+  Total Assets                                    112.67
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                      0.00
+
+CHECK
+  Total Assets                                    112.67
+  Liabilities + Total Equity                        0.00
+  Equation Status                             FILTERED VIEW (may not balance)
+=========================
 Exchange rates refreshed successfully for 2026-03-31.
 Error: Unknown rates command. Use: rates refresh
 Exchange rates refreshed successfully for 2026-03-31.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Total Assets                                      0.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                      0.00
+
+CHECK
+  Total Assets                                      0.00
+  Liabilities + Total Equity                        0.00
+  Equation Status                             PASS
+=========================
 All transactions have been cleared.
 No transactions found.
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+  Total Assets                                      0.00
+
+LIABILITIES
+  Total Liabilities                                 0.00
+
+EQUITY
+  Retained Earnings Breakdown
+  Current Period Net Income                         0.00
+  Total Equity                                      0.00
+
+CHECK
+  Total Assets                                      0.00
+  Liabilities + Total Equity                        0.00
+  Equation Status                             PASS
+=========================
 --- Transaction Manager Exited ---

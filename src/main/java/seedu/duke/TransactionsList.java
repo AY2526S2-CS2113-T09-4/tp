@@ -3,6 +3,8 @@ package seedu.duke;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 /**
@@ -43,6 +45,7 @@ public class TransactionsList {
         if (t.isBalanced()) {
             transactions.add(t);
             save();
+            refreshBalanceSheetCsv();
         } else {
             throw new IllegalArgumentException("Transaction is unbalanced!");
         }
@@ -186,12 +189,14 @@ public class TransactionsList {
         Transaction transaction = findById(id);
         transactions.remove(transaction);
         save();
+        refreshBalanceSheetCsv();
     }
 
     public void clearTransactions() {
         logger.info("Clearing all transactions.");
         transactions.clear();
         save();
+        refreshBalanceSheetCsv();
         System.out.println("All transactions have been cleared.");
     }
 
@@ -200,6 +205,7 @@ public class TransactionsList {
         Transaction transaction = findById(id);
         transaction.update(date, desc, newPostings, currency);
         save();
+        refreshBalanceSheetCsv();
     }
 
     public Transaction getTransactionById(int id) {
@@ -219,5 +225,64 @@ public class TransactionsList {
 
     public List<Transaction> getTransactions() {
         return transactions;
+    }
+
+    // =========================
+    // BALANCE SHEET FEATURE
+    // =========================
+
+    public void printBalanceSheet() {
+        printBalanceSheet(null, autoConvertDisplay, autoConvertDisplay ? displayCurrency : null);
+    }
+
+    public void printBalanceSheet(String accountPrefix) {
+        printBalanceSheet(accountPrefix, autoConvertDisplay, autoConvertDisplay ? displayCurrency : null);
+    }
+
+    public void printBalanceSheet(String accountPrefix, boolean useConversion, String targetCurrency) {
+        Map<String, Double> totals = buildBalanceSheetTotals(accountPrefix, useConversion, targetCurrency);
+
+        String scope = (accountPrefix == null || accountPrefix.isBlank()) ? "ALL ACCOUNTS" : accountPrefix;
+        String reportCurrency = useConversion ? targetCurrency : "MULTI";
+
+        BalanceSheet balanceSheet = new BalanceSheet(totals, scope, reportCurrency, useConversion);
+        balanceSheet.print();
+        balanceSheet.exportToCsv("data/balance-sheet.csv");
+    }
+
+    private Map<String, Double> buildBalanceSheetTotals(String accountPrefix,
+                                                        boolean useConversion,
+                                                        String targetCurrency) {
+        Map<String, Double> totals = new TreeMap<>();
+
+        for (Transaction transaction : transactions) {
+            for (Posting posting : transaction.getPostings()) {
+                if (accountPrefix != null && !accountPrefix.isBlank()
+                        && !posting.getAccount().isUnder(accountPrefix)) {
+                    continue;
+                }
+
+                double amount = posting.getAmount();
+                if (useConversion) {
+                    if (converter == null) {
+                        throw new IllegalStateException("Currency converter is not available.");
+                    }
+                    amount = converter.convert(amount, transaction.getCurrency(), targetCurrency);
+                }
+
+                String accountName = posting.getAccountName();
+                totals.put(accountName, totals.getOrDefault(accountName, 0.0) + amount);
+            }
+        }
+
+        return totals;
+    }
+
+    private void refreshBalanceSheetCsv() {
+        try {
+            printBalanceSheet();
+        } catch (Exception e) {
+            logger.warning("Unable to refresh balance sheet CSV: " + e.getMessage());
+        }
     }
 }

@@ -1,0 +1,14 @@
+Balance Sheet
+Scope,ALL ACCOUNTS
+Report Currency,ORIGINAL TRANSACTION CURRENCIES
+
+Section,Account,Amount
+Assets,Assets:Cash,-5000.00
+Assets,Total Assets,-5000.00
+Liabilities,Total Liabilities,0.00
+Retained Earnings (Expenses),Expenses:General,-5000.00
+Equity,Current Period Net Income,-5000.00
+Equity,Total Equity,-5000.00
+
+Check,Total Assets,-5000.00
+Check,Liabilities + Total Equity,-5000.00

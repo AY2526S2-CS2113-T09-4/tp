@@ -1,0 +1,35 @@
+@startuml
+actor User
+participant Parser
+participant TransactionsList
+participant CurrencyConverter
+participant BalanceSheet
+
+User -> Parser : "balance -acc Assets -to USD"
+
+Parser -> Parser : parse arguments\n(acc, to)
+
+Parser -> TransactionsList : printBalanceSheet(acc, true, "USD")
+
+TransactionsList -> TransactionsList : iterate transactions
+TransactionsList -> TransactionsList : iterate postings
+
+TransactionsList -> TransactionsList : check account.isUnder(acc)
+
+alt conversion enabled
+    TransactionsList -> CurrencyConverter : convert(amount, from, USD)
+    CurrencyConverter --> TransactionsList : converted amount
+end
+
+TransactionsList -> TransactionsList : aggregate totals
+
+TransactionsList -> BalanceSheet : new BalanceSheet(totals, scope, currency)
+
+BalanceSheet -> BalanceSheet : format output
+BalanceSheet -> BalanceSheet : compute totals & check
+
+BalanceSheet -> User : print balance sheet
+
+BalanceSheet -> BalanceSheet : exportToCsv()
+
+@enduml

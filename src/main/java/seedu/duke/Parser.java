@@ -213,6 +213,9 @@ public class Parser {
         case "help":
             handleHelp();
             break;
+        case "balance":
+            handleBalance(arguments);
+            break;
         default:
             throw new IllegalArgumentException(
                     "Unknown command. Use add, list, edit, delete, clear, convert, rates, help, or exit.");
@@ -480,6 +483,27 @@ public class Parser {
         System.out.println("Exchange rates refreshed successfully for " + liveData.getDate() + ".");
     }
 
+    private void handleBalance(String args) {
+        Map<String, List<String>> map = parseArguments(args);
+        String to = getFirstElementFromMap(map, "-to");
+        String acc = getFirstElementFromMap(map, "-acc");
+
+        if (to != null) {
+            to = CurrencyValidator.validateAndGet(to);
+            list.setDisplayCurrency(to);
+            list.setAutoConvertDisplay(true);
+        } else {
+            list.setAutoConvertDisplay(false);
+        }
+
+        if (acc != null) {
+            list.printBalanceSheet(acc);
+            return;
+        }
+
+        list.printBalanceSheet();
+    }
+
     private void handleHelp() {
         System.out.println("=== Ledger67 Help ===");
         System.out.println("Available commands:");
@@ -569,6 +593,15 @@ public class Parser {
 
         System.out.println("13. exit - Exit the application");
         System.out.println("    Format: exit");
+        System.out.println();
+
+        System.out.println("14. balance - Generate Balance Sheet");
+        System.out.println("    Format: balance");
+        System.out.println("    Optional A: balance -to CURRENCY");
+        System.out.println("    Optional B: balance -acc ACCOUNT");
+        System.out.println("    Optional C: balance -acc ACCOUNT -to CURRENCY");
+        System.out.println("    Example: balance -to USD");
+        System.out.println("    Example: balance -acc Assets:Bank");
         System.out.println();
 
         System.out.println("=== Additional Information ===");

@@ -6,6 +6,8 @@
 
 Whether you're a student learning accounting, a small business owner, or someone who wants to better manage personal finances, Ledger67 provides a simple yet powerful way to track your financial activities with proper accounting rigor.
 
+Ledger67 also provides balance sheet generation and export features to help users analyse their financial position in real time.
+
 ## Quick Start
 
 ### Prerequisites
@@ -47,8 +49,7 @@ If you have the source code and want to build from source:
 ### What is Double-Entry Bookkeeping?
 Double-entry bookkeeping is an accounting method where every financial transaction affects at least two accounts. For every debit entry, there must be a corresponding credit entry of equal value. This system ensures that the accounting equation always remains balanced.
 
-```
-#### Hierarchical Accounts
+### Hierarchical Accounts
 
 Ledger67 supports hierarchical account structures using `:`.
 
@@ -59,6 +60,7 @@ This allows accounts to be organised into categories and subcategories:
 - `Expenses:Food`
 
 This structure enables more powerful filtering and organisation of financial data.
+
 ```
 
 ### Key Concepts for Beginners
@@ -395,10 +397,167 @@ This will:
 #### Notes
 - This is a **view feature** — it does not modify stored data.
 - Filtering works based on account hierarchy (not simple text matching).
+
+---
+
+### Viewing the Balance Sheet: `balance`
+
+Displays a summary of your financial position based on the accounting equation:
+```
+Assets = Liabilities + Equity
+
+```
+This command aggregates all transactions and shows totals by account category.
+---
+
+#### Basic Format
+```
+balance
+```
+#### Example Output
+```
+===== BALANCE SHEET =====
+Scope: ALL ACCOUNTS
+Report Currency: ORIGINAL TRANSACTION CURRENCIES
+
+ASSETS
+Assets:Cash                          350.00
+Assets:Bank:Main                    200.00
+Total Assets                        550.00
+
+LIABILITIES
+Total Liabilities                     0.00
+
+EQUITY
+Equity:Capital                      400.00
+Current Period Net Income           150.00
+Total Equity                        550.00
+
+CHECK
+Total Assets                        550.00
+Liabilities + Total Equity          550.00
+Equation Status                     PASS
+========================================
+
 ```
 
 ---
 
+### Including Income and Expenses
+Ledger67 automatically incorporates:
+
+- **Income** → increases Equity  
+- **Expenses** → decreases Equity  
+
+These are reflected as:
+```
+Net Income = Income - Expenses
+```
+This ensures the balance sheet satisfies:
+```
+Assets = Liabilities + Equity
+```
+
+---
+### Filtering Balance Sheet by Account: `balance -acc`
+
+Allows you to generate a balance sheet for a specific account hierarchy.
+
+#### Format
+```
+
+balance -acc ACCOUNT
+
+```
+
+#### Examples
+```
+
+balance -acc Assets
+balance -acc Assets:Bank
+
+```
+
+#### Behaviour
+- Includes only accounts under the specified hierarchy
+- Uses the same hierarchical logic as `list -acc`
+- May not balance fully (partial view)
+
+#### Example Output
+```
+
+Scope: Assets:Bank
+Equation Status: FILTERED VIEW (may not balance)
+
+```
+
+---
+### Viewing Balance Sheet in Another Currency: `balance -to`
+Displays all values converted into a target currency.
+
+#### Format
+```
+
+balance -to TARGET_CURRENCY
+
+```
+
+#### Example
+```
+
+balance -to USD
+
+```
+
+#### Behaviour
+- Converts all postings into the selected currency
+- Uses latest exchange rates
+- Does NOT modify stored data
+
+---
+
+### Combining Filters and Conversion
+
+You can combine both options:
+
+```
+
+balance -acc Assets:Bank -to USD
+
+```
+
+---
+### Exporting Balance Sheet
+
+Each time the `balance` command is run:
+
+- A CSV file is generated at:
+```
+data/balance-sheet.csv
+
+```
+#### File Contents
+The CSV includes:
+- Account names
+- Aggregated balances
+- Report currency
+
+#### Notes
+- The file is overwritten each time `balance` is executed
+- Useful for Excel analysis or reporting
+- Export does NOT affect ledger data
+
+---
+
+### Important Notes
+
+- `balance` is a **read-only feature**
+- It does NOT modify any transactions
+- Currency conversion is **view-only**
+- Filtering may result in non-balanced views
+```
+
+---
 
 ### Getting Help: `help`
 Displays available commands and usage instructions.
@@ -430,7 +589,12 @@ help
 
 **Q**: How does Ledger67 handle the double-entry aspect if I only enter one side?
 
-**A**: Ledger67 is designed as a simplified double-entry system. When you record a transaction, you're entering one side of the entry (e.g., an expense debit). Ledger67 requires you to explicitly provide all postings in a transaction. Each transaction must include at least two postings, and the system validates that they balance.
+**A**: Ledger67 follows a strict double-entry system.
+
+Every transaction must include at least two postings, and the system ensures that:
+- Total debits = total credits
+
+Transactions that do not balance will be rejected.
 
 ## Command Summary
 
@@ -448,6 +612,10 @@ help
 | **Convert Transaction**      | `convert transaction ID -to TARGET`                                  | Convert stored transaction               |
 | **Rates**                    | `rates refresh`                                                      | Refresh exchange rates                   |
 | **Confirm**                  | `confirm`, `confirm all`, `confirm ID`                               | Store converted transactions             |
+| **Balance Sheet**            | `balance`                                                           | View full balance sheet                 |
+| **Balance (Filter)**         | `balance -acc ACCOUNT`                                              | Filter balance sheet by account         |
+| **Balance (Convert)**        | `balance -to TARGET_CURRENCY`                                       | View balance in another currency        |
+| **Balance (Combined)**       | `balance -acc ACCOUNT -to TARGET_CURRENCY`                          | Filter + convert balance                |
 | **Help**                     | `help`                                                               | Show help                                |
 | **Exit**                     | `exit`                                                               | Exit program                             |
 ```

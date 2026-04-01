@@ -13,6 +13,12 @@ add -d 21/03/2026 -desc Transaction 4 -p "Assets:Cash 300" -p "Equity:Capital 30
 
 list
 
+balance
+balance -to EUR
+balance -acc Assets
+balance -acc Assets:Bank
+balance -acc Assets:Bank -to USD
+
 convert
 convert -a abc -from SGD -to USD
 convert -a 100 -from SGD -to USD
@@ -42,9 +48,16 @@ edit 1
 edit 1 -p "Assets"
 edit 1 -d 22/03/2026 -desc Edited Transaction 1 -p "Assets:Cash 150" -p "Equity:Capital 150" -c USD
 
+balance
+balance -to USD
+balance -acc Assets
+
 delete
 delete abc
 delete 4
+
+balance
+balance -acc Assets:Cash
 
 rates refresh
 rates update
@@ -52,5 +65,6 @@ rates refresh
 
 clear
 list
+balance
 
 exit

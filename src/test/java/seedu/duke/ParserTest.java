@@ -192,4 +192,28 @@ public class ParserTest {
         String output = outputStreamCaptor.toString();
         assertTrue(output.contains("Assets"));
     }
+
+    @Test
+    public void testBalanceCommand() {
+        list.addTransaction(createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD"));
+
+        outputStreamCaptor.reset();
+        String input = "balance\nexit";
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("===== BALANCE SHEET ====="));
+    }
+
+    @Test
+    public void testBalanceAccCommand() {
+        list.addTransaction(createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD"));
+
+        outputStreamCaptor.reset();
+        String input = "balance -acc Assets\nexit";
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("Scope: Assets"));
+    }
 }

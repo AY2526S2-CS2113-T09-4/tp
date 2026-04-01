@@ -71,7 +71,11 @@ The TransactionsList component provides:
 
 #### Model Components
 The Transaction, TransactionType, CurrencyValidator, Posting and Account classes form the data model:
-- **Transaction**: Represents a financial transaction with date, description, amount, type, and currency
+- **Transaction**: Represents a financial transaction with:
+    - date
+    - description
+    - multiple postings (double-entry)
+    - currency
 - **TransactionType**: Validates and stores transaction type (debit/credit)
 - **CurrencyValidator**: Validates currency codes against an approved list
 - **Posting**: Represents a single entry transaction, containing an account and amount.
@@ -99,7 +103,7 @@ The transaction flow manages the lifecycle of user financial records from user i
 *   **Read (List):** `TransactionsList` retrieves the list of transactions, sorts them chronologically by date, and displays them. It optionally collaborates with the `CurrencyConverter` to display amounts in a user-specified target currency without mutating the underlying data.
 ![Class Diagram](./diagrams/listtransactionflow.png)
 *   **Update (Edit):** Users can modify specific fields of an existing transaction using its auto-incremented ID. `TransactionsList` retrieves the target transaction and updates only the provided fields.
-![Class Diagram](./diagrams/updatetransaction.png)
+![Class Diagram](./diagrams/updatetransactionflow.png)
 *   **Delete/Clear:** Individual transactions are removed by ID, or the entire list is cleared via `TransactionsList`. Both operations immediately trigger a save to storage.
 ![Class Diagram](./diagrams/deletetransactionflow.png)
 
@@ -445,7 +449,179 @@ Ensured documentation stays current with evolving project features.
 * **Comprehensive Reference**: All features are properly documented
 * **Consistent Experience**: Documentation matches actual application behavior
 
-### [Proposed] Improved Account Validation and Hierarchical Account Registry
+---
+### Balance Sheet Feature
+Implementer: JJ
+
+The Balance Sheet feature allows users to generate a real-time summary of their financial position based on the accounting equation:
+
+```
+Assets = Liabilities + Equity
+
+```
+
+It aggregates all transactions and computes totals across hierarchical account categories.
+---
+
+#### Integration with Architecture
+
+This feature primarily extends:
+
+- `Parser` → parses `balance` commands
+- `TransactionsList` → computes aggregated values
+- `Account` → supports hierarchical filtering
+- `CurrencyConverter` → enables optional currency conversion
+
+New component:
+- `BalanceSheet` → handles formatting and export logic
+---
+
+#### 1. Command Handling
+
+The `Parser` handles the following command formats:
+```
+
+balance
+balance -acc ACCOUNT
+balance -to TARGET_CURRENCY
+balance -acc ACCOUNT -to TARGET_CURRENCY
+
+````
+
+The parser:
+- extracts optional flags (`-acc`, `-to`)
+- passes parameters to `TransactionsList.printBalanceSheet(...)`
+---
+
+#### 2. Balance Aggregation Logic
+Implemented in `TransactionsList`:
+```
+private Map<String, Double> buildBalanceSheetTotals(...)
+````
+
+##### Workflow:
+
+1. Iterate through all transactions
+2. Iterate through all postings
+3. Apply account filtering:
+
+    * Uses `Account.isUnder(accountPrefix)`
+4. Apply currency conversion (if enabled)
+5. Aggregate totals into a `Map<String, Double>`
+
+---
+#### 3. Hierarchical Account Support
+
+The feature leverages:
+```
+account.isUnder("Assets:Bank")
+```
+
+This enables:
+
+* parent-level aggregation (`Assets`)
+* sub-account filtering (`Assets:Bank:DBS`)
+
+---
+
+#### 4. Income and Expense Handling
+
+Income and Expenses are incorporated into Equity:
+
+```
+Net Income = Income - Expenses
+```
+Implementation:
+
+* Income accounts increase equity
+* Expense accounts reduce equity
+* Computed dynamically during balance generation
+
+This ensures:
+
+```
+Assets = Liabilities + Equity
+```
+
+---
+
+#### 5. Currency Conversion
+
+If `-to` is specified:
+
+* Each posting is converted using `CurrencyConverter`
+* Conversion is applied **during aggregation only**
+* Stored data remains unchanged
+
+---
+
+#### 6. Output Formatting
+
+Handled by the `BalanceSheet` class:
+
+* Groups accounts into:
+
+    * Assets
+    * Liabilities
+    * Equity
+* Displays:
+
+    * sub-accounts
+    * totals
+    * accounting check
+
+---
+
+#### 7. CSV Export
+
+Each execution of `balance` triggers:
+```
+balanceSheet.exportToCsv("data/balance-sheet.csv");
+```
+
+##### File Characteristics:
+
+* Overwrites existing file
+* Contains:
+
+    * account names
+    * balances
+    * report currency
+
+---
+
+#### Design Considerations
+**1. Separation of Concerns**
+* Aggregation → `TransactionsList`
+* Presentation → `BalanceSheet`
+**2. Non-Destructive Operations**
+
+* Conversion is view-only
+* No mutation of stored transactions
+
+**3. Reuse of Existing Structures**
+
+* Uses `Posting`, `Account`, `CurrencyConverter`
+* Avoids duplicating logic
+
+**4. Hierarchical Scalability**
+
+* Supports deep account nesting without redesign
+
+---
+
+#### Limitations
+
+* Filtered views (`-acc`) may not balance fully
+* Mixed currencies require `-to` for meaningful totals
+* CSV export is overwrite-only (no versioning)
+
+---
+
+#### Sequence Diagram
+![Balance Sheet Sequence Diagram](diagrams/BalanceSheetSequence.png)
+
+### [Proposed] Improved Account Validation
 Implementer: Pran
 
 ### [Proposed] Date and Regex Filtering Engineer
@@ -537,7 +713,9 @@ The Transaction Manager solves several key problems:
 | v2.0    | user     | validate my transactions                   | ensure my double-entry accounts are balanced                      |
 | v2.0    | user     | add new categories under each account type | filter by transaction easily and see where I am spending my money |
 | v2.0    | user     | be able to categorise transactions         | filter by transaction type                                        |
-| v2.0    | user     | generate balance sheet report              | get a detailed look into my assets                                |
+| v2.0 | user | generate balance sheet | understand financial position |
+| v2.0 | user | export balance sheet | analyse data in Excel |
+| v2.0 | user | filter balance sheet by account | focus on specific categories |
 
 ### Non-Functional Requirements
 

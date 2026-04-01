@@ -165,5 +165,22 @@ public class TransactionsListTest {
         Assertions.assertTrue(output.contains("Assets:Bank:DBS"));
         Assertions.assertFalse(output.contains("Assets:Cash"));
     }
+
+    @Test
+    public void testPrintBalanceSheetByAccount() {
+        List<Posting> postings = new ArrayList<>();
+        postings.add(new Posting("Assets:Bank:DBS", 1000.0));
+        postings.add(new Posting("Income:Salary", 1000.0));
+
+        Transaction t = new Transaction("10/10/2023", "Salary", postings, "USD");
+        list.addTransaction(t);
+
+        outputStreamCaptor.reset();
+        list.printBalanceSheet("Assets:Bank");
+
+        String output = outputStreamCaptor.toString();
+        Assertions.assertTrue(output.contains("Scope: Assets:Bank"));
+        Assertions.assertTrue(output.contains("Assets:Bank:DBS"));
+    }
 }
 
