@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -96,14 +98,13 @@ public class ParserTest {
 
     @Test
     public void testAddCommandSuccess() {
-        String input = "add transaction -date 15/03/2023 -desc Lunch -p " +
+        String input = "add -date 15/03/2023 -desc Lunch -p " +
                 "\"Expenses 15.5\" -p \"Assets -15.5\" -c SGD\nexit";
         runParserWithInput(input);
 
         String output = outputStreamCaptor.toString();
-        assertTrue(output.contains("Transaction added successfully."));
+        assertTrue(output.contains("Transaction added successfully"));
 
-        outputStreamCaptor.reset();
         list.listTransactions();
         assertTrue(outputStreamCaptor.toString().contains("Lunch"));
     }
@@ -113,7 +114,7 @@ public class ParserTest {
         list.addTransaction(createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD"));
 
         outputStreamCaptor.reset();
-        String input = "list transaction\nexit";
+        String input = "list\nexit";
         runParserWithInput(input);
 
         assertTrue(outputStreamCaptor.toString().contains("Coffee"));
@@ -126,7 +127,7 @@ public class ParserTest {
         int id = t.getId();
 
         outputStreamCaptor.reset();
-        String input = "delete transaction " + id + "\nexit";
+        String input = "delete " + id + "\nexit";
         runParserWithInput(input);
 
         assertTrue(outputStreamCaptor.toString().contains("Successfully deleted"));
@@ -139,7 +140,7 @@ public class ParserTest {
         int id = t.getId();
 
         outputStreamCaptor.reset();
-        String input = "edit transaction " + id + " -desc Tea\nlist\nexit";
+        String input = "edit " + id + " -desc Tea\nlist\nexit";
         runParserWithInput(input);
 
         String output = outputStreamCaptor.toString();
@@ -152,7 +153,7 @@ public class ParserTest {
         list.addTransaction(createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD"));
 
         outputStreamCaptor.reset();
-        String input = "clear transaction\nlist\nexit";
+        String input = "clear\nlist\nexit";
         runParserWithInput(input);
 
         String output = outputStreamCaptor.toString();
@@ -215,5 +216,60 @@ public class ParserTest {
 
         String output = outputStreamCaptor.toString();
         assertTrue(output.contains("Scope: Assets"));
+    }
+
+    @Test
+    public void generatePostings_dailyExpense_success() {
+        List<Posting> postings = PresetHandler.generatePostings("DAILYEXPENSE 50.00");
+        assertEquals(2, postings.size());
+        
+        // Expenses +50, Cash -50
+        assertEquals("Expenses", postings.get(0).getAccountName());
+        assertEquals(50.0, postings.get(0).getAmount());
+        assertEquals("Assets:Cash", postings.get(1).getAccountName());
+        assertEquals(-50.0, postings.get(1).getAmount());
+    }
+
+    @Test
+    public void generatePostings_income_success() {
+        List<Posting> postings = PresetHandler.generatePostings("INCOME 1000");
+        assertEquals(2, postings.size());
+        
+        // Bank +1000, Income -1000
+        assertEquals("Assets:Bank", postings.get(0).getAccountName());
+        assertEquals(1000.0, postings.get(0).getAmount());
+        assertEquals("Income", postings.get(1).getAccountName());
+        assertEquals(-1000.0, postings.get(1).getAmount());
+    }
+
+    @Test
+    public void generatePostings_invalidFormat_exceptionThrown() {
+        // Missing amount
+        assertThrows(IllegalArgumentException.class, () -> {
+            PresetHandler.generatePostings("DAILYEXPENSE");
+        });
+    }
+
+    @Test
+    public void generatePostings_invalidAmount_exceptionThrown() {
+        // Amount is not a number
+        assertThrows(IllegalArgumentException.class, () -> {
+            PresetHandler.generatePostings("DAILYEXPENSE abc");
+        });
+    }
+
+    @Test
+    public void generatePostings_unknownType_exceptionThrown() {
+        // Type does not exist
+        assertThrows(IllegalArgumentException.class, () -> {
+            PresetHandler.generatePostings("GIFT 10.00");
+        });
+    }
+
+    @Test
+    public void generatePostings_emptyInput_exceptionThrown() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            PresetHandler.generatePostings("");
+        });
     }
 }

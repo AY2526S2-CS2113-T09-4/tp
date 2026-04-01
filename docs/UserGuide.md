@@ -99,7 +99,7 @@ The equation is balanced and the transaction is valid. In Ledger67, you would re
 ### Adding a Transaction: `add`
 Adds a new financial transaction to your ledger.
 
-**Format**: `add -date DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY`
+**Format (Manual)**: `add -date DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY`
 
 ### Parameters
 - `-date`: The date of the transaction (e.g., `DD/MM/YYYY`).
@@ -110,6 +110,20 @@ Adds a new financial transaction to your ledger.
 ### Example
 ```
 add -date 18/03/2026 -desc "Office supplies" -p "Assets:Cash -45.50" -p "Expenses:OfficeSupplies 45.50" -c SGD
+```
+
+**Format (Presets)**: `add -date DATE -preset TYPE AMOUNT -c CURRENCY`
+
+
+### Parameters
+- `-date`: The date of the transaction (e.g., `DD/MM/YYYY`).
+- `-desc`: A brief description of the transaction.
+- `-presets`: Presets: DAILYEXPENSE, INCOME, BUYINGSTOCKS
+- `-c`: The currency code (e.g., SGD, USD, EUR).
+
+### Examples
+```
+add -date 18/03/2026 -preset DAILYEXPENSE 50.00 -c SGD
 ```
 
 ### Listing and Filtering Transactions: `list`

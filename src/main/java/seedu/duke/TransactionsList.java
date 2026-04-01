@@ -328,7 +328,17 @@ public class TransactionsList {
 
     private void refreshBalanceSheetCsv() {
         try {
-            printBalanceSheet();
+            // Calculate totals without triggering a console print
+            Map<String, Double> totals = buildBalanceSheetTotals(null, autoConvertDisplay,
+                    autoConvertDisplay ? displayCurrency : null);
+
+            String reportCurrency = autoConvertDisplay ? displayCurrency : "MULTI";
+
+            BalanceSheet balanceSheet = new BalanceSheet(totals, "ALL ACCOUNTS",
+                    reportCurrency, autoConvertDisplay);
+
+            // Only export to file, do not call balanceSheet.print()
+            balanceSheet.exportToCsv("data/balance-sheet.csv");
         } catch (Exception e) {
             logger.warning("Unable to refresh balance sheet CSV: " + e.getMessage());
         }

@@ -22,3 +22,4 @@ text-ui-test/EXPECTED-UNIX.TXT
 issues.md
 exchange-rates.json
 ledger.txt
+*.csv

@@ -9,6 +9,9 @@ add -date 01/02/2026 -desc "Morning Coffee" -p "Expenses:Food 5" -p "Assets:Cash
 
 add -date 15/03/2026 -desc "Netflix" -p "Expenses:Entertainment 15" -p "Assets:Credit -15" -c USD
 
+add -date 16/03/2026 -desc "Movies" -preset "DAILYEXPENSE 10" -c SGD
+add -date 20/03/2026 -desc "Buying Nvidia" -preset "BUYINGSTOCKS 1000" -c USD
+
 list
 list -acc Expenses:Food
 list -begin 01/01/2026 -end 31/01/2026

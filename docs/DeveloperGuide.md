@@ -6,9 +6,6 @@ This project is built on the Java platform and follows object-oriented design pr
 
 **Note**: The PlantUML diagram source files are located in the `docs/diagrams/` directory. To generate PNG images from the `.puml` files, use a PlantUML tool or online generator.
 
-## Additional Notes
-For JJ: modify the architecture below to add conversion
-
 ## Design & Implementation
 
 ### Architecture
@@ -32,6 +29,7 @@ The Transaction Manager follows a layered architecture with the following main c
     - `ExchangeRateStorage`
     - `LiveExchangeRateService`
 8. **Account System**: 'Account' handles hierarchial account parsing and filtering logic
+9. **PresetHandler**: Logic for generating standardized double-entry postings from simple keywords (e.g., DAILYEXPENSE).
 
 The components interact as follows:
 - `Duke` creates and initializes `Parser` and `TransactionsList`.
@@ -99,12 +97,16 @@ The transaction flow manages the lifecycle of user financial records from user i
 
 **CRUD Operations**
 *   **Create (Add):** The `Parser` extracts transaction arguments (date, description, amount, type, currency) and instantiates a `Transaction` object. The `TransactionsList` adds this object to its in-memory list and immediately triggers a save.
+
 ![Class Diagram](./diagrams/addtransactionflow.png)
 *   **Read (List):** `TransactionsList` retrieves the list of transactions, sorts them chronologically by date, and displays them. It optionally collaborates with the `CurrencyConverter` to display amounts in a user-specified target currency without mutating the underlying data.
+
 ![Class Diagram](./diagrams/listtransactionflow.png)
 *   **Update (Edit):** Users can modify specific fields of an existing transaction using its auto-incremented ID. `TransactionsList` retrieves the target transaction and updates only the provided fields.
+
 ![Class Diagram](./diagrams/updatetransactionflow.png)
 *   **Delete/Clear:** Individual transactions are removed by ID, or the entire list is cleared via `TransactionsList`. Both operations immediately trigger a save to storage.
+
 ![Class Diagram](./diagrams/deletetransactionflow.png)
 
 **Transaction Data Model**
@@ -148,6 +150,7 @@ The following class diagram shows the relationships between all components:
 ![Class Diagram](./diagrams/ClassDiagram.png)
 
 ### Storage Feature
+
 Implementer: JJ
 The storage feature is responsible for persisting transaction data to local file storage and restoring it upon application startup.
 ---
@@ -206,6 +209,7 @@ The diagram above shows:
 ---
 
 ### Currency Conversion Feature
+
 Implementer: JJ
 The currency conversion feature extends the system by introducing dynamic currency handling, persistent exchange rate storage, and real-time rate retrieval.
 ---
@@ -292,6 +296,7 @@ The diagram above illustrates how user input flows through the system:
 
 
 #### 6. Confirm and Store Converted Transactions
+
 This feature extends the currency conversion system by allowing users to **persist converted values into storage**, 
 instead of keeping them as view-only.
 Previously, all conversion operations (`convert`, `convert transaction`, `list transaction -to`) were strictly **non-destructive**.
@@ -305,6 +310,29 @@ New internal state variables in `Parser`:
 * `pendingTransactionId`: stores the transaction ID (for single conversion)
 * `pendingTargetCurrency`: stores the selected target currency
 * `pendingFromListView`: indicates whether the conversion came from list view
+
+
+
+
+#### Transaction Presets Feature
+**Implementer: [Pran]**
+
+The Preset feature simplifies the user experience by allowing common double-entry transactions to be recorded using a single keyword instead of manual entry for every account posting.
+
+**Implementation Details:**
+The `PresetHandler` class acts as a factory for `Posting` objects.
+- **Keyword Mapping**: Keywords like `DAILYEXPENSE`, `INCOME`, and `BUYINGSTOCKS` are mapped to pre-defined accounting movements.
+- **Dynamic Amounting**: While the accounts are fixed by the preset, the amount is passed as a parameter during the `add` command.
+
+**Workflow:**
+1. `Parser` detects the `-preset` flag in the `add` command.
+2. `Parser` passes the preset string (e.g., `DAILYEXPENSE 50.00`) to `PresetHandler`.
+3. `PresetHandler` returns a `List<Posting>` (e.g., `Expenses +50.00`, `Assets:Cash -50.00`).
+4. `Transaction` is instantiated using these postings and added to `TransactionsList`.
+
+**Design Considerations:**
+- **Extensibility**: New accounting workflows can be added to the `switch` statement in `PresetHandler` without modifying the core `Parser` or `Transaction` logic.
+- **Default Descriptions**: If the user omits a `-desc`, the system automatically uses the preset name as the description to ensure data integrity.
 ---
 
 ##### Workflow
@@ -624,11 +652,23 @@ balanceSheet.exportToCsv("data/balance-sheet.csv");
 ### [Proposed] Improved Account Validation
 Implementer: Pran
 
-### [Proposed] Date and Regex Filtering Engineer
-Implementer: ??
+#### Advanced Filtering & Bulk Operations
+**Implementer: Pran**
+
+To manage large datasets, Ledger67 implements a layered filtering system used for both viewing (`list`) and bulk removal (`delete`).
+
+**Implementation Details:**
+Filtering is implemented as a series of static utility methods in `TransactionsList` that utilize Java Streams:
+- **Date Filtering**: `filterTransactionsByDate` checks if a transaction falls within an inclusive `LocalDate` range.
+- **Regex Filtering**: `filterTransactionsByRegex` uses `java.util.regex` to perform case-insensitive matches on transaction descriptions.
+- **Layered Application**: In `Parser.handleList` and `Parser.handleDelete`, these filters are applied sequentially (e.g., Filter by Date → Filter by Regex → Filter by Account).
+
+**Bulk Deletion Safety:**
+- To prevent accidental data loss, the `delete` command requires at least one filter flag (`-begin`, `-end`, `-match`, or `-acc`) when not deleting by a specific ID.
+- The system calculates the list of matching transactions first and then iterates through the IDs to remove them from the master list.
 
 ### [Proposed] Transaction Presets and UI Improvements
-Implementer: ??
+Implementer: Pran
 
 ### Hierarchical Account Registry & Filtering Feature
 Implementer: JJ

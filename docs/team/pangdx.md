@@ -17,6 +17,7 @@ My role involved architecting the core transaction model to support double-entry
         *   **Highlights**: Specifically handled the complexity of `edit`, ensuring that modifying a multi-posting transaction correctly updates all internal balances and maintains data integrity.
     *   **Logging Infrastructure**: Integrated Java Logging API with varying levels (INFO, WARNING, etc.) across the application to facilitate easier debugging and auditing.
     *   **Regex and Date Filtering**: Allow the user to list transactions with stacking filters like `-acc` and `-match` for Regex
+    *   **Presets**: Allow the user to add transactions transactions faster using presets like `add -date 18/03/2026 -preset DAILYEXPENSE 50.00 -c SGD`. Available presets: DAILYEXPENSE, INCOME, BUYINGSTOCKS
 
 *   **Contributions to the User Guide (UG)**:
     *   Documented the new double-entry syntax, specifically explaining how to use the `-p` flag for balanced postings.

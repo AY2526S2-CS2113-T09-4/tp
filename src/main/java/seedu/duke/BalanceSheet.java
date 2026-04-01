@@ -137,15 +137,18 @@ public class BalanceSheet {
         }
     }
 
+    private boolean isAccountMatchingRoot(String account, String root) {
+        return account.equals(root) || account.startsWith(root + ":");
+    }
+
     private void printAccountsUnder(String root) {
         printAccountsUnder(root, false, false);
     }
 
     private void printAccountsUnder(String root, boolean indent, boolean negate) {
-        String prefix = root + ":";
         for (Map.Entry<String, Double> entry : accountTotals.entrySet()) {
             String account = entry.getKey();
-            if (account.startsWith(prefix)) {
+            if (isAccountMatchingRoot(account, root)) { // Changed logic
                 double amount = negate ? -entry.getValue() : entry.getValue();
                 System.out.printf("%s%-45s %10.2f%n",
                         indent ? "    " : "  ",
@@ -156,10 +159,9 @@ public class BalanceSheet {
     }
 
     private void writeSection(BufferedWriter writer, String section, String root) throws IOException {
-        String prefix = root + ":";
         for (Map.Entry<String, Double> entry : accountTotals.entrySet()) {
             String account = entry.getKey();
-            if (account.startsWith(prefix)) {
+            if (isAccountMatchingRoot(account, root)) { // Changed logic
                 writer.write(escapeCsv(section) + "," + escapeCsv(account) + "," + format(entry.getValue()));
                 writer.newLine();
             }
@@ -167,10 +169,9 @@ public class BalanceSheet {
     }
 
     private void writeSectionNegative(BufferedWriter writer, String section, String root) throws IOException {
-        String prefix = root + ":";
         for (Map.Entry<String, Double> entry : accountTotals.entrySet()) {
             String account = entry.getKey();
-            if (account.startsWith(prefix)) {
+            if (isAccountMatchingRoot(account, root)) { // Changed logic
                 writer.write(escapeCsv(section) + "," + escapeCsv(account) + "," + format(-entry.getValue()));
                 writer.newLine();
             }
@@ -179,9 +180,8 @@ public class BalanceSheet {
 
     private double getRootTotal(String root) {
         double total = 0;
-        String prefix = root + ":";
         for (Map.Entry<String, Double> entry : accountTotals.entrySet()) {
-            if (entry.getKey().startsWith(prefix)) {
+            if (isAccountMatchingRoot(entry.getKey(), root)) { // Changed logic
                 total += entry.getValue();
             }
         }

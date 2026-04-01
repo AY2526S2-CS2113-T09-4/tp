@@ -257,7 +257,18 @@ public class Parser {
     }
 
     public static String getFirstElementFromMap(Map<String, List<String>> map, String s) {
-        return map.containsKey(s) ? map.get(s).get(0) : null;
+        if (!map.containsKey(s)) {
+            return null;
+        }
+        String value = map.get(s).get(0);
+        // Remove leading and trailing double or single quotes
+        if (value != null && value.length() >= 2) {
+            if ((value.startsWith("\"") && value.endsWith("\"")) ||
+                    (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.substring(1, value.length() - 1);
+            }
+        }
+        return value;
     }
 
     public static List<Posting> convertStringList2PostingList(List<String> postingStrings) {
@@ -291,17 +302,33 @@ public class Parser {
         Map<String, List<String>> map = parseArguments(args);
         String date = getFirstElementFromMap(map, "-date");
         String desc = getFirstElementFromMap(map, "-desc");
-        List<String> postingStrings = map.get("-p");
         String currency = getFirstElementFromMap(map, "-c");
-        // amount is integrated in the postingStrings
 
-        if (postingStrings == null) {
-            throw new IllegalArgumentException("Error: At least one posting (-p) is required.");
+        // New: Check for preset
+        String presetData = getFirstElementFromMap(map, "-preset");
+        List<Posting> postings;
+
+        if (presetData != null) {
+            // Use logic from PresetHandler
+            postings = PresetHandler.generatePostings(presetData);
+            // If user didn't provide a description, use the preset name as a default
+            if (desc == null) {
+                desc = presetData.split("\\s+")[0];
+            }
+        } else {
+            // Fallback to standard manual posting logic
+            List<String> postingStrings = map.get("-p");
+            if (postingStrings == null) {
+                throw new IllegalArgumentException("Error: Either -preset or at least one posting (-p) is required.");
+            }
+            postings = convertStringList2PostingList(postingStrings);
         }
-        List<Posting> postings = convertStringList2PostingList(postingStrings);
+
+        
+
         Transaction t = new Transaction(date, desc, postings, currency);
         list.addTransaction(t);
-        System.out.println("Transaction added successfully.");
+        System.out.println("Transaction added successfully via " + (presetData != null ? "preset." : "manual input."));
     }
 
     private void handleList(String args) {
@@ -559,13 +586,18 @@ public class Parser {
         System.out.println();
 
         System.out.println("1. add - Add a new transaction");
-        System.out.println("   Format: add -date DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY");
+        System.out.println("   Format (Manual): add -date DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY");
         System.out.println("   ASSETS = EQUITY - LIABILITIES + (INCOME - EXPENSES)");
         System.out.println("   Each transaction must be balanced. This is checked by the system automatically.");
         System.out.println("   Postings support hierarchical account names using ':'");
         System.out.println("   Examples: Assets:Cash, Assets:Bank:DBS, Expenses:Food, Income:Salary");
         System.out.println("   Example: add -date 18/03/2026 -desc Office supplies -p " +
                 "\"Assets:Cash -45.50\" -p \"Expenses:OfficeSupplies 45.50\" -c SGD");
+        System.out.println("   Format (Preset): add -date DATE -preset TYPE AMOUNT -c CURRENCY");
+        System.out.println("   Presets: DAILYEXPENSE, INCOME, BUYINGSTOCKS");
+        System.out.println("   Example: add -date 18/03/2026 -preset DAILYEXPENSE 50.00 -c SGD");
+        System.out.println("   Example: add -date 18/03/2026 -desc Office supplies -p \"Assets:Cash -45.50\" " +
+                "-p \"Expenses:OfficeSupplies 45.50\" -c SGD");
         System.out.println();
 
         System.out.println("2. list - Display and filter transactions");
