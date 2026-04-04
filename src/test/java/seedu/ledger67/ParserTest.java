@@ -1,4 +1,4 @@
-package seedu.duke;
+package seedu.ledger67;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -222,7 +222,7 @@ public class ParserTest {
     public void generatePostings_dailyExpense_success() {
         List<Posting> postings = PresetHandler.generatePostings("DAILYEXPENSE 50.00");
         assertEquals(2, postings.size());
-        
+
         // Expenses +50, Cash -50
         assertEquals("Expenses", postings.get(0).getAccountName());
         assertEquals(50.0, postings.get(0).getAmount());
@@ -234,7 +234,7 @@ public class ParserTest {
     public void generatePostings_income_success() {
         List<Posting> postings = PresetHandler.generatePostings("INCOME 1000");
         assertEquals(2, postings.size());
-        
+
         // Bank +1000, Income -1000
         assertEquals("Assets:Bank", postings.get(0).getAccountName());
         assertEquals(1000.0, postings.get(0).getAmount());
@@ -271,5 +271,180 @@ public class ParserTest {
         assertThrows(IllegalArgumentException.class, () -> {
             PresetHandler.generatePostings("");
         });
+    }
+
+    @Test
+    public void testUiAssistToggle() {
+        // Toggle on and then off
+        String input = "uiassist -on\nuiassist -off\nexit";
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("UI Assist is now ON"));
+        assertTrue(output.contains("UI Assist is now OFF"));
+    }
+
+    @Test
+    public void testUiAssistAddManualSuccess() {
+        // Simulation steps:
+        // 1. uiassist -on
+        // 2. add
+        // 3. 1 (Manual Entry)
+        // 4. 20/03/2026 (Date)
+        // 5. SGD (Currency)
+        // 6. Dinner (Description)
+        // 7. Expenses:Food 25.50 (Posting 1)
+        // 8. Assets:Cash -25.50 (Posting 2)
+        // 9. [Empty Line] (Finish postings)
+        // 10. exit
+        String input = "uiassist -on\n" +
+                "add\n" +
+                "1\n" +
+                "20/03/2026\n" +
+                "SGD\n" +
+                "Dinner\n" +
+                "Expenses:Food 25.50\n" +
+                "Assets:Cash -25.50\n" +
+                "\n" +
+                "exit";
+
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("Enter date (DD/MM/YYYY)"));
+        assertTrue(output.contains("Enter currency"));
+        assertTrue(output.contains("Transaction added successfully"));
+
+        // Verify the transaction exists in the list
+        assertEquals(1, list.getTransactions().size());
+        assertEquals("Dinner", list.getTransactions().get(0).getDescription());
+    }
+
+    @Test
+    public void testUiAssistAddPresetSuccess() {
+        // Simulation steps:
+        // 1. uiassist -on
+        // 2. add
+        // 3. 2 (Preset)
+        // 4. 21/03/2026 (Date)
+        // 5. EUR (Currency)
+        // 6. DAILYEXPENSE (Type)
+        // 7. 50.00 (Amount)
+        // 8. Work Lunch (Description)
+        // 9. exit
+        String input = "uiassist -on\n" +
+                "add\n" +
+                "2\n" +
+                "21/03/2026\n" +
+                "EUR\n" +
+                "DAILYEXPENSE\n" +
+                "50.00\n" +
+                "Work Lunch\n" +
+                "exit";
+
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("Use Preset"));
+        assertTrue(output.contains("Transaction added successfully via preset."));
+
+        Transaction t = list.getTransactions().get(0);
+        assertEquals(50.0, t.getPostings().get(0).getAmount());
+        assertEquals("EUR", t.getCurrency());
+    }
+
+    @Test
+    public void testUiAssistListWithFilters() {
+        // 1. uiassist -on
+        // 2. list
+        // 3. Expenses (Account filter)
+        // 4. [Enter] (No start date)
+        // 5. [Enter] (No end date)
+        // 6. [Enter] (No regex)
+        // 7. USD (To currency)
+        // 8. exit
+        String input = "uiassist -on\n" +
+                "list\n" +
+                "Expenses\n" +
+                "\n" +
+                "\n" +
+                "\n" +
+                "USD\n" +
+                "exit";
+
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("Filter by Account?"));
+        assertTrue(output.contains("[Generated Command: list -acc Expenses -to USD]"));
+    }
+
+    @Test
+    public void testUiAssistDeleteById() {
+        // Add a transaction first
+        list.addTransaction(createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD"));
+        int id = list.getTransactions().get(0).getId();
+
+        // 1. uiassist -on
+        // 2. delete
+        // 3. 1 (Choice: ID)
+        // 4. [ID]
+        // 5. exit
+        String input = "uiassist -on\n" +
+                "delete\n" +
+                "1\n" +
+                id + "\n" +
+                "exit";
+
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("Delete by Transaction ID"));
+        assertTrue(output.contains("Successfully deleted Transaction " + id));
+        assertTrue(list.getTransactions().isEmpty());
+    }
+
+    @Test
+    public void testUiAssistConvertSimple() {
+        // 1. uiassist -on
+        // 2. convert
+        // 3. 1 (Simple amount)
+        // 4. 100
+        // 5. USD
+        // 6. SGD
+        // 7. exit
+        String input = "uiassist -on\n" +
+                "convert\n" +
+                "1\n" +
+                "100\n" +
+                "USD\n" +
+                "SGD\n" +
+                "exit";
+
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("Amount to convert"));
+        assertTrue(output.contains("100.00 USD ="));
+    }
+
+    @Test
+    public void testUiAssistBalance() {
+        // 1. uiassist -on
+        // 2. balance
+        // 3. Assets (Filter)
+        // 4. SGD (To currency)
+        // 5. exit
+        String input = "uiassist -on\n" +
+                "balance\n" +
+                "Assets\n" +
+                "SGD\n" +
+                "exit";
+
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("[Generated Command: balance -acc Assets -to SGD]"));
+        assertTrue(output.contains("===== BALANCE SHEET ====="));
     }
 }

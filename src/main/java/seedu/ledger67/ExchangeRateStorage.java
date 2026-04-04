@@ -1,4 +1,4 @@
-package seedu.duke;
+package seedu.ledger67;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

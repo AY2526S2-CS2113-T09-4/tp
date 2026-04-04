@@ -1,5 +1,25 @@
 help
 
+uiassist -on
+
+add
+1
+01/01/2026
+SGD
+Office Lunch
+Expenses:Food 15
+Assets:Cash -15
+
+add
+2
+15/03/2026
+USD
+DAILYEXPENSE
+15
+Netflix
+
+uiassist -off
+
 
 add -date 01/01/2026 -desc "Office Lunch" -p "Expenses:Food 15" -p "Assets:Cash -15" -c SGD
 add -date 05/01/2026 -desc "Steak Dinner" -p "Expenses:Food 50" -p "Assets:Cash -50" -c SGD

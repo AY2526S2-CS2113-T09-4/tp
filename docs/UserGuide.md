@@ -96,6 +96,13 @@ The equation is balanced and the transaction is valid. In Ledger67, you would re
 
 ## Features
 
+### UI Assist: `uiassist`
+Toggles whether the user is using UI Assist in which the program helps the user guide through the input or the user is using the standard tagging system
+
+**Format:** `uiassist -on/-off`
+`uiassist -on` toggles the UI Assistance on. The user is now using prompted inputs to fill in the details
+`uiassist -off` toggles the UI Assistance off. The user is now using the standard tagging system
+
 ### Adding a Transaction: `add`
 Adds a new financial transaction to your ledger.
 

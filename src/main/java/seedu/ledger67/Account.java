@@ -1,4 +1,4 @@
-package seedu.duke;
+package seedu.ledger67;
 
 import java.util.Arrays;
 import java.util.List;

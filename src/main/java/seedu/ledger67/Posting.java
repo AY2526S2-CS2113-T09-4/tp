@@ -1,4 +1,4 @@
-package seedu.duke;
+package seedu.ledger67;
 
 public class Posting {
     private final Account account;

@@ -3,15 +3,12 @@ Scope,ALL ACCOUNTS
 Report Currency,ORIGINAL TRANSACTION CURRENCIES
 
 Section,Account,Amount
-Assets,Assets,-46.50
-Assets,Assets:Cash,-1140.00
-Assets,Assets:Investment,1000.00
-Assets,Total Assets,-186.50
+Assets,Assets:Cash,-5000.00
+Assets,Total Assets,-5000.00
 Liabilities,Total Liabilities,0.00
-Retained Earnings (Expenses),Expenses,-121.50
-Retained Earnings (Expenses),Expenses:Food,-65.00
-Equity,Current Period Net Income,-186.50
-Equity,Total Equity,-186.50
+Retained Earnings (Expenses),Expenses:General,-5000.00
+Equity,Current Period Net Income,-5000.00
+Equity,Total Equity,-5000.00
 
-Check,Total Assets,-186.50
-Check,Liabilities + Total Equity,-186.50
+Check,Total Assets,-5000.00
+Check,Liabilities + Total Equity,-5000.00

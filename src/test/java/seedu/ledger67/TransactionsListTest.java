@@ -1,9 +1,10 @@
-package seedu.duke;
+package seedu.ledger67;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -183,4 +184,3 @@ public class TransactionsListTest {
         Assertions.assertTrue(output.contains("Assets:Bank:DBS"));
     }
 }
-

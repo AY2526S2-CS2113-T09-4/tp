@@ -1,4 +1,4 @@
-package seedu.duke;
+package seedu.ledger67;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

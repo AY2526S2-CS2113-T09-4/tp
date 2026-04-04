@@ -1,4 +1,4 @@
-package seedu.duke;
+package seedu.ledger67;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -29,6 +29,9 @@ public class Parser {
     private String pendingTargetCurrency = null;
     private boolean pendingFromListView = false;
 
+    private boolean isUiAssistOn = false;
+    private Scanner scanner;
+    
     public Parser(TransactionsList list, CurrencyConverter converter,
             ExchangeRateStorage exchangeRateStorage,
             LiveExchangeRateService liveExchangeRateService) {
@@ -43,14 +46,33 @@ public class Parser {
         this.liveExchangeRateService = liveExchangeRateService;
     }
 
+
+    
+    
     public void start() {
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
+        this.scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print("Enter Command: ");
+            
+            if(!scanner.hasNextLine()){
+                break;
+            }
+            
             String input = scanner.nextLine().trim();
             if (input.equalsIgnoreCase("exit")) {
                 break;
             }
             if (input.isEmpty()) {
+                continue;
+            }
+            
+            if (input.equalsIgnoreCase("uiassist -on")) {
+                isUiAssistOn = true;
+                System.out.println("UI Assist is now ON. I will guide you through commands.");
+                continue;
+            } else if (input.equalsIgnoreCase("uiassist -off")) {
+                isUiAssistOn = false;
+                System.out.println("UI Assist is now OFF. Standard command mode active.");
                 continue;
             }
 
@@ -182,6 +204,15 @@ public class Parser {
         String[] parts = input.split("\\s+", 2);
         String command = parts[0].toLowerCase();
         String arguments = parts.length > 1 ? parts[1].trim() : "";
+
+        if (isUiAssistOn && arguments.isEmpty()) {
+            String interactiveArgs = UiAssistFactory.getInteractiveArguments(command, this.scanner);
+            if (!interactiveArgs.isEmpty()) {
+                arguments = interactiveArgs;
+                // Optional: Show the user what was generated so they learn the CLI formatting
+                System.out.println("[Generated Command: " + command + " " + arguments + "]");
+            }
+        }
 
         if (!command.equals("convert") && !command.equals("rates")) {
             if (arguments.toLowerCase().startsWith("transaction ")) {
@@ -680,6 +711,11 @@ public class Parser {
         System.out.println("    Optional C: balance -acc ACCOUNT -to CURRENCY");
         System.out.println("    Example: balance -to USD");
         System.out.println("    Example: balance -acc Assets:Bank");
+        System.out.println();
+
+        System.out.println("15. uiassist - Turn on/off UI Assistance");
+        System.out.println("    Format: uiassist -on/off");
+        System.out.println("    With UI Assistance on, the program will guide the user through using prompted inputs");
         System.out.println();
 
         System.out.println("=== Additional Information ===");
