@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**Ledger67** is a command-line double-entry accounting system designed to help individuals and small businesses manage their financial transactions efficiently. Built on the principles of double-entry bookkeeping, Ledger67 ensures that every financial transaction is recorded with both debit and credit entries, maintaining the fundamental accounting equation: **Assets = Equity - Liabilities + (Income - Expenses) **.
+**Ledger67** is a command-line double-entry accounting system designed to help individuals and small businesses manage their financial transactions efficiently. Built on the principles of double-entry bookkeeping, Ledger67 ensures that every financial transaction is recorded with both debit and credit entries, maintaining the fundamental accounting equation: **Assets = Equity - Liabilities + (Income - Expenses)**.
 
 Whether you're a student learning accounting, a small business owner, or someone who wants to better manage personal finances, Ledger67 provides a simple yet powerful way to track your financial activities with proper accounting rigor.
 
@@ -96,25 +96,25 @@ The equation is balanced and the transaction is valid. In Ledger67, you would re
 
 ## Features
 
-### UI Assist: `uiassist`
+### 1. UI Assist: `uiassist`
 Toggles whether the user is using UI Assist in which the program helps the user guide through the input or the user is using the standard tagging system
 
 **Format:** `uiassist -on/-off`
 `uiassist -on` toggles the UI Assistance on. The user is now using prompted inputs to fill in the details
 `uiassist -off` toggles the UI Assistance off. The user is now using the standard tagging system
 
-### Adding a Transaction: `add`
+### 2. Adding a Transaction: `add`
 Adds a new financial transaction to your ledger.
 
 **Format (Manual)**: `add -date DATE -desc DESCRIPTION -p POSTING1 -p POSTING2 -c CURRENCY`
 
-### Parameters
+**Parameters**
 - `-date`: The date of the transaction (e.g., `DD/MM/YYYY`).
 - `-desc`: A brief description of the transaction.
 - `-p`: A posting containing an account name and an amount (enclosed in quotes). You must have at least two postings.
 - `-c`: The currency code (e.g., SGD, USD, EUR).
 
-### Example
+**Example**
 ```
 add -date 18/03/2026 -desc "Office supplies" -p "Assets:Cash -45.50" -p "Expenses:OfficeSupplies 45.50" -c SGD
 ```
@@ -122,18 +122,18 @@ add -date 18/03/2026 -desc "Office supplies" -p "Assets:Cash -45.50" -p "Expense
 **Format (Presets)**: `add -date DATE -preset TYPE AMOUNT -c CURRENCY`
 
 
-### Parameters
+**Parameters**
 - `-date`: The date of the transaction (e.g., `DD/MM/YYYY`).
 - `-desc`: A brief description of the transaction.
 - `-presets`: Presets: DAILYEXPENSE, INCOME, BUYINGSTOCKS
 - `-c`: The currency code (e.g., SGD, USD, EUR).
 
-### Examples
+**Example**
 ```
 add -date 18/03/2026 -preset DAILYEXPENSE 50.00 -c SGD
 ```
 
-### Listing and Filtering Transactions: `list`
+### 3. Listing and Filtering Transactions: `list`
 Displays recorded transactions. You can view all transactions or use filters to narrow down the results by date, account, keyword, or currency.
 
 **Format**: `list [-acc ACCOUNT] [-begin DATE] [-end DATE] [-match REGEX] [-to CURRENCY]`
@@ -153,7 +153,68 @@ Displays recorded transactions. You can view all transactions or use filters to 
 *   **Search for any "Lunch" or "Dinner"**: `list -match "(Lunch|Dinner)"`
 *   **View all expenses in USD**: `list -acc Expenses -to USD`
 
-### Editing a Transaction: `edit`
+#### Example Output
+```
+
+ID: 2 | Date: 2026-03-19 | Desc: Salary | [USD]
+Assets:Bank:DBS              :    3000.00
+
+ID: 3 | Date: 2026-03-20 | Desc: Transfer | [SGD]
+Assets:Cash                  :    -500.00
+
+```
+
+---
+
+#### Combining with Currency View
+
+You can combine filtering with currency display:
+
+```
+
+list -acc Assets -to USD
+
+```
+
+This will:
+- Filter transactions under `Assets`
+- Display converted values in USD
+
+---
+
+#### Notes
+- This is a **view feature** — it does not modify stored data.
+- Filtering works based on account hierarchy (not simple text matching).
+
+---
+
+#### View Converted Values of All Listed Transactions: `list -to TARGET_CURRENCY`
+Views all existing transactions to a different currency.
+
+**Format**: `list -to TARGET_CURRENCY`
+
+**Parameters**:
+- `-to TARGET_CURRENCY`: Target currency code - `SGD`, `USD`, or `EUR`
+
+**Example**:
+```
+list -to SGD
+```
+Output:
+```
+ID: 1 | Date: 18/03/2026 | Desc: Office supplies | [SGD -> USD]
+    Assets:Cash                    :     -45.50 | Display: -33.97 USD
+    Expenses:OfficeSupplies        :      45.50 | Display: 33.97 USD
+```
+**Note**
+- This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
+- To store conversions:
+    - Use `confirm all` to store all transactions
+    - Use `confirm ID` to store a specific transaction
+
+---
+
+### 4. Editing a Transaction: `edit`
 Modifies an existing transaction.
 
 **Format**: `edit ID [-date DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]`
@@ -172,7 +233,7 @@ edit 1 -desc "Office stationery purchase"
 edit 2 -c EUR
 ```
 
-### Deleting Transactions: `delete`
+### 5. Deleting Transactions: `delete`
 Removes transactions from the ledger. You can delete a single transaction by its ID or remove multiple transactions at once using filters.
 
 #### Single Deletion
@@ -193,7 +254,7 @@ Removes transactions from the ledger. You can delete a single transaction by its
 *   **Delete by Date Range**: `delete -begin 01/01/2026 -end 15/01/2026` (Removes everything in the first half of January).
 *   **Layered Deletion**: `delete -acc Expenses:Entertainment -match Netflix` (Removes Netflix transactions specifically from that account).
 
-### Clearing All Transactions: `clear`
+### 6. Clearing All Transactions: `clear`
 Removes all transactions from the ledger (use with caution!).
 
 **Format**: `clear`
@@ -203,7 +264,7 @@ Removes all transactions from the ledger (use with caution!).
 clear
 ```
 
-### Currency Conversion: `convert`
+### 7. Currency Conversion: `convert`
 Converts amounts between different currencies using current exchange rates.
 
 **Format**: `convert -a AMOUNT -from SOURCE_CURRENCY -to TARGET_CURRENCY`
@@ -224,7 +285,7 @@ Output:
 **Note**
 - This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
 
-### Converting Existing Transactions: `convert transaction`
+#### Converting Existing Transactions: `convert transaction`
 Converts an existing transaction to a different currency.
 
 **Format**: `convert transaction ID -to TARGET_CURRENCY`
@@ -245,30 +306,7 @@ Transaction 3: 50.00 USD = 67.75 SGD
 - This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
 - To store the converted value, use the `confirm` command.
 
-### View Converted Values of All Listed Transactions: `list -to TARGET_CURRENCY`
-Views all existing transactions to a different currency.
-
-**Format**: `list -to TARGET_CURRENCY`
-
-**Parameters**:
-- `-to TARGET_CURRENCY`: Target currency code - `SGD`, `USD`, or `EUR`
-
-**Example**:
-```
-list -to SGD
-```
-Output:
-```
-ID: 1 | Date: 18/03/2026 | Desc: "Office supplies purchase" | Amount: 45.50 | Type: debit | Currency: SGD
-ID: 2 | Date: 18/03/2026 | Desc: "Consulting fee received" | Amount: 500.00 | Type: credit | Currency: USD | Display: 669.72 SGD
-```
-**Note**
-- This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
-- To store conversions:
-    - Use `confirm all` to store all transactions
-    - Use `confirm ID` to store a specific transaction
-
-### Refreshing Exchange Rates: `rates`
+### 8. Refreshing Exchange Rates: `rates`
 Refreshes live exchange rates from external sources.
 
 **Format**: `rates refresh`
@@ -282,7 +320,7 @@ Output:
 Exchange rates refreshed successfully for 2026-03-19.
 ```
 
-### Confirming Converted Transactions: `confirm`
+### 9. Confirming Converted Transactions: `confirm`
 
 After using conversion commands, Ledger67 allows you to **store the converted values permanently**.
 
@@ -290,7 +328,7 @@ By default, all conversions are **view-only**. You must explicitly confirm to up
 
 ---
 
-#### 1. Confirming a Single Converted Transaction
+#### Confirming a Single Converted Transaction
 
 After using:
 
@@ -319,7 +357,7 @@ confirm
 
 ---
 
-#### 2. Confirming Transactions from List View
+#### Confirming Transactions from List View
 
 After using:
 
@@ -361,75 +399,7 @@ confirm 2
 
 ---
 
-### Filtering Transactions by Account: `list -acc`
-Allows you to filter transactions based on hierarchical account categories.
-
-Ledger67 supports **hierarchical account names** using `:`. This means accounts can be structured into categories and subcategories such as:
-
-- `Assets:Cash`
-- `Assets:Bank:DBS`
-- `Expenses:Food`
-- `Income:Salary`
-
-#### Format
-```
-
-list -acc ACCOUNT
-
-```
-
-#### Examples
-```
-
-list -acc Assets
-list -acc Assets:Bank
-list -acc Expenses
-
-```
-
-#### Behaviour
-- Displays only transactions that contain postings under the specified account.
-- Supports hierarchical filtering:
-    - `Assets` → shows ALL asset-related postings (Cash, Bank, etc.)
-    - `Assets:Bank` → shows only bank-related postings
-- Filtering is **case-insensitive**.
-
-#### Example Output
-```
-
-ID: 2 | Date: 2026-03-19 | Desc: Salary | [USD]
-Assets:Bank:DBS              :    3000.00
-
-ID: 3 | Date: 2026-03-20 | Desc: Transfer | [SGD]
-Assets:Cash                  :    -500.00
-
-```
-
----
-
-#### Combining with Currency View
-
-You can combine filtering with currency display:
-
-```
-
-list -acc Assets -to USD
-
-```
-
-This will:
-- Filter transactions under `Assets`
-- Display converted values in USD
-
----
-
-#### Notes
-- This is a **view feature** — it does not modify stored data.
-- Filtering works based on account hierarchy (not simple text matching).
-
----
-
-### Viewing the Balance Sheet: `balance`
+### 10. Viewing the Balance Sheet: `balance`
 
 Displays a summary of your financial position based on the accounting equation:
 ```
@@ -437,6 +407,7 @@ Assets = Liabilities + Equity
 
 ```
 This command aggregates all transactions and shows totals by account category.
+
 ---
 
 #### Basic Format
@@ -472,7 +443,7 @@ Equation Status                     PASS
 
 ---
 
-### Including Income and Expenses
+#### Including Income and Expenses
 Ledger67 automatically incorporates:
 
 - **Income** → increases Equity  
@@ -488,7 +459,7 @@ Assets = Liabilities + Equity
 ```
 
 ---
-### Filtering Balance Sheet by Account: `balance -acc`
+#### Filtering Balance Sheet by Account: `balance -acc`
 
 Allows you to generate a balance sheet for a specific account hierarchy.
 
@@ -521,7 +492,7 @@ Equation Status: FILTERED VIEW (may not balance)
 ```
 
 ---
-### Viewing Balance Sheet in Another Currency: `balance -to`
+#### Viewing Balance Sheet in Another Currency: `balance -to`
 Displays all values converted into a target currency.
 
 #### Format
@@ -545,7 +516,7 @@ balance -to USD
 
 ---
 
-### Combining Filters and Conversion
+#### Combining Filters and Conversion
 
 You can combine both options:
 
@@ -556,7 +527,7 @@ balance -acc Assets:Bank -to USD
 ```
 
 ---
-### Exporting Balance Sheet
+#### Exporting Balance Sheet
 
 Each time the `balance` command is run:
 
@@ -587,7 +558,7 @@ The CSV includes:
 
 ---
 
-### Getting Help: `help`
+### 11. Getting Help: `help`
 Displays available commands and usage instructions.
 
 **Format**: `help`
@@ -628,12 +599,12 @@ Transactions that do not balance will be rejected.
 
 | Command                      | Format                                                               | Description                              |
 |------------------------------|----------------------------------------------------------------------|------------------------------------------|
-| **Add**                      | `add -d DATE -desc DESC -p POSTING -p POSTING -c CURRENCY`          | Add a new transaction                    |
+| **Add**                      | `add -date DATE -desc DESC -p POSTING -p POSTING -c CURRENCY`          | Add a new transaction                    |
 | **List**                     | `list`                                                               | Display all transactions                 |
 | **Filter by Account**        | `list -acc ACCOUNT`                                                  | Filter transactions by account           |
 | **List with Conversion**     | `list -to TARGET_CURRENCY`                                           | View transactions in another currency    |
 | **Filter + Convert**         | `list -acc ACCOUNT -to TARGET_CURRENCY`                              | Filter and convert                       |
-| **Edit**                     | `edit ID [-d DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]`         | Edit an existing transaction             |
+| **Edit**                     | `edit ID [-date DATE] [-desc DESC] [-p POSTING] [-c CURRENCY]`         | Edit an existing transaction             |
 | **Delete**                   | `delete ID`                                                          | Remove a transaction                     |
 | **Clear**                    | `clear`                                                              | Remove all transactions                  |
 | **Convert**                  | `convert -a AMOUNT -from SOURCE -to TARGET`                          | Convert currencies                       |

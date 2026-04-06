@@ -8,147 +8,146 @@ This project is built on the Java platform and follows object-oriented design pr
 
 ## Design & Implementation
 
-### Architecture
+### Architecture Overview
 
-The following architecture diagram provides a high-level view of the Transaction Manager system:
+Ledger67 is built on a layered architecture that emphasizes data integrity through double-entry bookkeeping principles. It follows a **Model-View-Controller (MVC)** inspired pattern, adapted for a stateful Command Line Interface (CLI).
 
-![Architecture Overview](./diagrams/ArchitectureOverview.png)
+![Architecure Diagram](./diagrams/architecture.png)
 
-The Transaction Manager follows a layered architecture with the following main components:
+1.  **Main (Ledger67)**: The entry point. It initializes the infrastructure (Storage, Currency Services), loads existing data, and bootstraps the `Parser` to start the execution loop.
+2.  **Controller (Parser & UiAssistFactory)**: 
+    *   **Parser**: The central engine that interprets CLI inputs. It features a **Stateful Workflow** for multi-step commands (e.g., `convert` → `confirm`).
+    *   **UiAssistFactory**: An interactive layer that intercepts commands when "UI Assist" mode is active, prompting users for required fields to build valid CLI arguments.
+3.  **Logic Layer (TransactionsList & PresetHandler)**:
+    *   **TransactionsList**: The domain manager. It handles filtering (Regex, Date, Account), CRUD operations, and invokes the `BalanceSheet` engine.
+    *   **PresetHandler**: A factory that transforms shorthand keywords (e.g., `DAILYEXPENSE`) into full double-entry posting sets.
+4.  **Model Layer (Transaction, Posting, Account)**: Encapsulates the financial logic, ensuring that every entry adheres to the fundamental accounting equation.
+5.  **Persistence Layer (Storage & ExchangeRateStorage)**: Handles flat-file persistence (TSV for transactions, JSON for exchange rates).
+6.  **Currency Engine**: A specialized subsystem consisting of a `LiveExchangeRateService` (API client), `CurrencyConverter`, and `CurrencyValidator`.
 
-1. **Main**: The entry point that initializes all components and starts the application loop.
-2. **Parser**: * Handles **multi-step commands with pending state (confirm workflow)**
-    - Maintains temporary state for confirmation-based workflows (e.g., currency conversion confirmation)
-3. **TransactionsList**: Manages the collection of Transaction objects and provides CRUD operations.
-4. **Transaction**: Represents individual financial transactions with validation and data integrity.
-5. **Validators**: Utility classes (CurrencyValidator, TransactionType) that enforce business rules.
-6. **Storage**: Handles persistence of transactions to local file storage.
-7. **Currency Services**: Handles currency conversion and exchange rate management.
-    - `CurrencyConverter`
-    - `ExchangeRateData`
-    - `ExchangeRateStorage`
-    - `LiveExchangeRateService`
-8. **Account System**: 'Account' handles hierarchial account parsing and filtering logic
-9. **PresetHandler**: Logic for generating standardized double-entry postings from simple keywords (e.g., DAILYEXPENSE).
-
-The components interact as follows:
-- `Duke` creates and initializes `Parser` and `TransactionsList`.
-- `Parser` processes user commands and calls methods on `TransactionsList`.
-- `TransactionsList` manages `Transaction` objects and uses validators for data integrity.
-- `Transaction` objects encapsulate individual transaction data and validation logic.
-- `Storage` reads from and writes to local files.
-- `CurrencyConverter` performs currency conversion using exchange rate data.
-- `ExchangeRateStorage` loads and saves exchange rate data locally.
-- `LiveExchangeRateService` fetches real-time exchange rates from an external API.
+---
 
 ### Design Considerations
 
-**Transaction Storage**: Transactions are stored in an ArrayList for efficient random access and iteration. This design choice supports the application's requirement for fast listing and editing operations.
+**1. Double-Entry Integrity**  
+Unlike simple expense trackers, Ledger67 enforces a "Balanced" rule for every transaction. A transaction is only committed if the sum of its internal amounts equals zero, following the equation:  
+`Assets = Equity - Liabilities + (Income - Expenses)`
 
-**Command Parsing**: The Parser uses simple string splitting and HashMap storage for command arguments, providing flexibility for future command extensions without complex parsing logic.
+**2. Hierarchical Account System**  
+Accounts are not flat strings; they are hierarchical objects (`Account`). This allows users to categorize finances using colons (e.g., `Assets:Bank:DBS`) and enables the system to perform "roll-up" reporting where a filter for `Assets` includes all sub-accounts.
 
-**Validation Separation**: Validation logic is separated into dedicated classes (CurrencyValidator, TransactionType) to follow the Single Responsibility Principle and enable easy testing and modification.
+**3. Hybrid Input Modes**  
+The system bridges the gap between power users and beginners. It supports a **Flag-based CLI** (fast, regex-compatible) and an **Interactive UI Assist** mode (guided, prompt-based) that generates the underlying CLI commands for the user.
+
+**4. Stateful Confirmation Workflow**  
+To prevent accidental data modification during currency conversion or bulk listing, the `Parser` implements a "Pending state." This allows users to preview converted values in "View-Only" mode before explicitly committing them via a `confirm` command.
+
+---
 
 ### Component-Level Design
 
-#### Parser Component
-The Parser component is responsible for:
-- Reading user input from the console
-- Parsing command strings into actionable operations
-- Validating command syntax and arguments
-- Delegating operations to the TransactionsList component
-- Providing user feedback and error messages
+#### Parser & UI Component
+*   **Flag Parsing**: Uses regex-based tokenization to support non-positional arguments (e.g., `-date`, `-desc`, `-p`).
+*   **Command Delegation**: Maps input to specialized handlers like `handleAdd`, `handleList`, and `handleConvert`.
+*   **UI Assistance**: When enabled, `UiAssistFactory` uses a `Scanner` to interactively collect data, ensuring mandatory flags are never omitted.
 
 #### Transaction Management Component
-The TransactionsList component provides:
-- Storage and management of Transaction objects using ArrayList
-- Auto-incremented ID generation
-- CRUD operations (add, list, edit, delete, clear)
-- Data integrity maintenance
-- Logging for debugging and monitoring
+*   **Filtering Engine**: Utilizes Java Streams and functional predicates to layer filters. Users can filter by account prefix, date ranges, and case-insensitive regex descriptions simultaneously.
+*   **Balance Sheet Generation**: Aggregates totals across all accounts, calculates "Net Income" from Income/Expense accounts, and validates the accounting equation. It provides dual output: a formatted console view and an automated CSV export for external analysis.
 
-#### Model Components
-The Transaction, TransactionType, CurrencyValidator, Posting and Account classes form the data model:
-- **Transaction**: Represents a financial transaction with:
-    - date
-    - description
-    - multiple postings (double-entry)
-    - currency
-- **TransactionType**: Validates and stores transaction type (debit/credit)
-- **CurrencyValidator**: Validates currency codes against an approved list
-- **Posting**: Represents a single entry transaction, containing an account and amount.
-- **Account**: Encapsulates hierarchial account logic and validation
+#### Currency Engine
+*   **External Integration**: `LiveExchangeRateService` fetches real-time data from the Frankfurter API using Java’s `HttpClient`.
+*   **Conversion Logic**: The `CurrencyConverter` uses a base-currency (EUR) triangulation method to convert between any two supported currencies (SGD, USD, EUR) based on cached or live rates.
 
+---
 
-**Key Relationships**:
-- `Duke` aggregates `Parser` and `TransactionsList`
-- `Parser` uses `TransactionsList` for operations
-- `TransactionsList` contains multiple `Transaction` objects
-- `Transaction` uses `TransactionType` and `CurrencyValidator`
-- All components use Java's built-in collections and utilities
+### Model Components
+
+*   **Transaction**: The core entity. It contains an auto-incrementing ID, metadata (Date, Description, Currency), and a `List<Posting>`. It acts as the final gatekeeper for data integrity via the `isBalanced()` check.
+*   **Posting**: Represents a single entry in a ledger. It links an `Account` to a `double` amount. It handles the sign-convention logic (e.g., determining if a positive value in an "Income" account represents an increase or decrease in the internal equation).
+*   **Account**: Manages the validation of "Root" accounts (Assets, Liabilities, Equity, Income, Expenses) and handles the logic for hierarchical membership (`isUnder`).
+*   **ExchangeRateData**: A Data Transfer Object (DTO) used for GSON serialization/deserialization of currency rates.
+
+---
+
+### Data Persistence
+*   **Transaction Storage**: Uses a custom tab-separated format (`ledger.txt`). Complex objects like the list of `Postings` are serialized into a semicolon-delimited string within the file to maintain a flat structure while preserving the multi-entry nature of double-entry bookkeeping.
+*   **Rate Storage**: Uses `exchange-rates.json` to cache API results, allowing the application to function offline using fallback or previously fetched data.
 
 
 ## Implementation Details
 
 ### Transaction Flow
-Implementer: Pran
+**Implementer: Pran, JJ**
 
-The transaction flow manages the lifecycle of user financial records from user input down to persistent storage.
+The transaction flow manages the lifecycle of financial records, ensuring that every entry satisfies the fundamental accounting equation before being persisted.
 
-**CRUD Operations**
-*   **Create (Add):** The `Parser` extracts transaction arguments (date, description, amount, type, currency) and instantiates a `Transaction` object. The `TransactionsList` adds this object to its in-memory list and immediately triggers a save.
+#### 1. Create (Add) Flow
+The addition process supports two paths: **Manual Entry** (providing specific postings) or **Preset Entry** (using templates).
+*   **Input**: If `isUiAssistOn` is true, the `UiAssistFactory` interactively prompts the user for fields. Otherwise, the `Parser` extracts flags directly.
+*   **Processing**:
+    *   If a `-preset` is used, the `PresetHandler` generates a `List<Posting>` (e.g., swapping Assets for Expenses).
+    *   The `Parser` validates the currency and date format.
+    *   The `Transaction` object is instantiated and must pass an `isBalanced()` check (Sum of postings ≈ 0).
+*   **Finalization**: `TransactionsList` appends the transaction, triggers `Storage` to save, and refreshes the background `balance-sheet.csv`.
 
-![Class Diagram](./diagrams/addtransactionflow.png)
-*   **Read (List):** `TransactionsList` retrieves the list of transactions, sorts them chronologically by date, and displays them. It optionally collaborates with the `CurrencyConverter` to display amounts in a user-specified target currency without mutating the underlying data.
+![Add Flow Diagram](./diagrams/addtransactionflow.png)
 
-![Class Diagram](./diagrams/listtransactionflow.png)
-*   **Update (Edit):** Users can modify specific fields of an existing transaction using its auto-incremented ID. `TransactionsList` retrieves the target transaction and updates only the provided fields.
+#### 2. Read (List/Filter) Flow
+Listing is non-destructive and supports layered filtering.
+*   **Filtering**: `TransactionsList` applies filters in sequence: Date Range → Regex Match → Account Hierarchy (e.g., filtering for `Assets` includes `Assets:Cash`).
+*   **View-Only Conversion**: If the `-to` flag is present, the `Parser` sets a **Pending State**. The `TransactionsList` renders the converted values for preview but does not modify the underlying data unless a `confirm` command follows.
 
-![Class Diagram](./diagrams/updatetransactionflow.png)
-*   **Delete/Clear:** Individual transactions are removed by ID, or the entire list is cleared via `TransactionsList`. Both operations immediately trigger a save to storage.
+![List Flow Diagram](./diagrams/listtransactionflow.png)
 
-![Class Diagram](./diagrams/deletetransactionflow.png)
+#### 3. Update (Edit) Flow
+Updates allow modifying any part of an existing transaction while enforcing re-validation.
+*   **Lookup**: `TransactionsList` retrieves the transaction by ID.
+*   **Modification**: The `Transaction.update()` method selectively replaces fields (Date, Desc, Currency, or Postings).
+*   **Validation**: If postings are updated, the `isBalanced()` check is re-run. If the new set is unbalanced, the update is aborted.
 
-**Transaction Data Model**
-*   The `Transaction` class acts as the core entity. It contains an auto-incrementing integer ID, a `LocalDate` (enforced as DD/MM/YYYY), a description, a `double` amount, a `TransactionType` object, and a `String` currency.
-*   Validation is strictly enforced upon instantiation:
-    *   `TransactionType` restricts types to strictly "debit" or "credit".
-    *   `CurrencyValidator` restricts currencies to an approved list ("SGD", "USD", "EUR").
+![Update Flow Diagram](./diagrams/updatetransactionflow.png)
+
+#### 4. Delete Flow (Single & Bulk)
+Deletion supports targeted removal or mass-clearing based on filters.
+*   **Single**: Deletes a specific transaction by its unique ID.
+*   **Bulk**: Uses the same filtering engine as the `list` command to identify a sub-set of transactions for removal.
+*   **Safety**: Bulk deletion requires at least one filter flag to prevent accidental total wipes (users must use `clear` for that).
+
+![Delete Flow Diagram](./diagrams/deletetransactionflow.png)
 
 ---
 
-#### Design Decisions
-*   **Fail-Fast Validation in Domain Entities:** Validation logic (e.g., checking for empty descriptions, valid date formats, valid currencies) is strictly enforced directly inside the `Transaction` constructor, `TransactionType`, and `CurrencyValidator`. 
-    *   *Rationale:* This ensures that a `Transaction` object can never exist in an invalid state in memory. If bad data is passed, it fails immediately before being added to the list.
-*   **Encapsulated Validation:** Validation logic for specific fields is separated into utility/wrapper classes (`TransactionType` and `CurrencyValidator`) rather than bloating the `Transaction` class itself.
-*   **Wrapper Classes for Constrained Values:** Instead of keeping the transaction type as a raw string, it is wrapped in a `TransactionType` struct-like class.
-    *   *Rationale:* It centralizes the string-matching logic (allowing case-insensitive checks for "debit" or "credit") and prevents typos from polluting the data model.
-*   **Hierarchical Account Design:**
-    *   *Rationale:*
-        * Accounts are structured using `:` to support nested categorisation 
-        * Enables scalable filtering and reporting 
-        * Avoids ambiguity compared to flat string-based categories
+### Updated Transaction Data Model
+The `Transaction` model is designed for **Double-Entry Bookkeeping**:
+
+*   **Identity & Metadata**: Contains a unique `int id`, `LocalDate date`, `String description`, and `String currency`.
+*   **Postings**: Instead of a single amount, it holds a `List<Posting>`. Each `Posting` links a specific `Account` to a `double` amount.
+*   **Account Logic**: The `Account` class validates that the root is one of the five standard types: *Assets, Liabilities, Equity, Income, Expenses*. It handles colon-delimited hierarchy (e.g., `Expenses:Food`).
+*   **Balance Integrity**: 
+    *   `Posting.getInternalAmount()`: Translates external user numbers into internal accounting signs based on the account type (e.g., a positive number in `Expenses` is a debit, while a positive number in `Income` is a credit).
+    *   `Transaction.isBalanced()`: Sums all `internalAmounts`. The transaction is valid only if the total is zero (within a $10^{-4}$ tolerance for floating-point precision).
+*   **Persistence**: Serialized as a Tab-Separated Value (TSV) line where postings are encoded as `Account1=Amount;Account2=Amount`.
 
 ---
+
+#### Design Considerations
+*   **Validation Timing (Balanced vs. Unbalanced):** 
+    *   The system checks if the sum of all postings in a transaction equals zero. 
+    *   **Decision:** We allow the creation of an "unbalanced" transaction object in memory during the parsing phase to provide specific feedback (e.g., "Your transaction is off by 5.00"), but we prevent it from being committed to the `TransactionsList` or `Storage`.
+*   **Atomicity:** 
+    *   By grouping all postings into a single `Transaction` object, we ensure that an "Office Supply" purchase either fails entirely or succeeds entirely. It is impossible to have an expense recorded without a corresponding deduction from assets.
 
 #### Alternatives Considered
-**1. Input Parsing: Regex Flag Mapping vs. Fixed Position Arguments**
-*   **Alternative:** Require users to enter data in a strict order separated by a delimiter (e.g., `add 18/03/2026 | Office supplies | 45.50 | debit | SGD`).
-*   **Pros:** Much simpler to implement using a basic `String.split("\\|")`.
-*   **Cons:** Highly error-prone for the user. If they forget the order or miss a delimiter, the application will parse the wrong fields.
-*   **Decision:** The regex-based flag map (using `-desc`, etc.) was chosen to prioritize a flexible, forgiving user experience over implementation simplicity.
+*   **Alternative 1: Flat String Postings:** Storing postings as a simple list of strings within the Transaction class.
+    *   **Pros:** Easier to parse and store.
+    *   **Cons:** Extremely difficult to perform mathematical validations or hierarchical filtering.
+    *   **Decision:** We implemented a dedicated `Posting` class with numeric `amount` and structured `Account` objects to enable rigorous accounting checks.
+*   **Alternative 2: Single-entry Legacy System:** Storing one account and one amount per line.
+    *   **Pros:** Simpler CLI syntax (`add -a 50 -acc Food`).
+    *   **Cons:** Violates fundamental accounting principles and makes it impossible to track where the money came from (e.g., Cash vs. Credit Card).
+    *   **Decision:** Shifted to the multi-posting `-p` flag system to support true double-entry bookkeeping.
 
-**2. Transaction Identifiers: Auto-incrementing Integer vs UUID**
-*   **Alternative:** Assign a randomly generated UUID to each transaction instead of an auto-incrementing integer.
-*   **Pros:** Eliminates the need to track the `nextId` state across application restarts and prevents ID collisions when merging files.
-*   **Cons:** UUIDs are long, clunky, and highly inconvenient for users to type in a CLI environment when running `edit` or `delete` commands.
-*   **Decision:** Auto-incrementing integers were selected to provide a user-friendly, concise CLI experience.
-
-#### Class Diagrams
-
-The following class diagram shows the relationships between all components:
-
-![Class Diagram](./diagrams/ClassDiagram.png)
 
 ### Storage Feature
 
@@ -401,9 +400,20 @@ The `PresetHandler` class acts as a factory for `Posting` objects.
 3. `PresetHandler` returns a `List<Posting>` (e.g., `Expenses +50.00`, `Assets:Cash -50.00`).
 4. `Transaction` is instantiated using these postings and added to `TransactionsList`.
 
-#### Design Considerations:
-- **Extensibility**: New accounting workflows can be added to the `switch` statement in `PresetHandler` without modifying the core `Parser` or `Transaction` logic.
-- **Default Descriptions**: If the user omits a `-desc`, the system automatically uses the preset name as the description to ensure data integrity.
+#### Design Considerations
+*   **Defaulting Metadata:** 
+    *   When using a preset, the user provides minimal info.
+    *   **Decision:** The system automatically injects a default description (e.g., "Daily Expense") if the `-desc` flag is missing, ensuring the data model remains populated while reducing user typing.
+*   **Extensibility:** 
+    *   The `PresetHandler` uses a Factory pattern. 
+    *   **Decision:** This allows developers to add new financial workflows (like `DEPRECIATION` or `LOAN_REPAYMENT`) by simply adding a new case to the factory, without touching the core `Parser` logic.
+
+#### Alternatives Considered
+*   **Alternative 1: User-Defined Templates:** Allowing users to save their own custom presets to a file.
+    *   **Pros:** Highly flexible.
+    *   **Cons:** Increases complexity of the storage system and requires a "Template Management" UI.
+    *   **Decision:** Hardcoded presets were chosen for the MVP to provide immediate value for common tasks (Income, Stocks, Expenses) with zero configuration required.
+
 ---
 
 
@@ -687,8 +697,18 @@ Filtering is implemented as a series of static utility methods in `TransactionsL
 
 ![Transaction Presets Diagram](diagrams/filteringtransactionflow.png)
 
-### [Proposed] Transaction Presets and UI Improvements
-Implementer: Pran
+#### Design Considerations
+*   **Predicate Composition:** 
+    *   Filters are applied as a "stack." 
+    *   **Decision:** We use Java Predicates to chain conditions. If a user provides `-acc Assets` and `-match Starbucks`, the system creates a composite predicate `(isAssets AND matchesStarbucks)`. This ensures that adding more filter types in the future does not require nested if-else blocks.
+*   **Non-Destructive Filtering:** 
+    *   The `list` command filters the view without removing items from the master `ArrayList`. 
+
+#### Alternatives Considered
+*   **Alternative 1: In-place Index Removal:** Iterating through the list and removing items that don't match.
+    *   **Pros:** Low memory overhead.
+    *   **Cons:** Very dangerous; a bug in the filter could wipe the user's data during a `list` operation.
+    *   **Decision:** The system always returns a *new* filtered list for display, keeping the master `TransactionsList` immutable during read operations.
 
 ### Hierarchical Account Registry & Filtering Feature
 Implementer: JJ
@@ -730,6 +750,36 @@ public boolean isUnder(String parentAccount)
 #### Sequence Diagram
 ![Hierarchical Account Registry & Filtering Feature Diagram](diagrams/HierachalAccRegFiltering.png)
 
+
+### UI Improvements and Assistance
+**Implementer: Pran**
+
+To bridge the gap between a powerful CLI and a user-friendly experience, Ledger67 implements a "UI Assistance" mode. This feature caters to users who find long command-line flags (like `-date`, `-desc`, `-p`) difficult to remember.
+
+![UI Assistance Sequence](./diagrams/UIAssistanceSequence.png)
+
+#### Implementation Details
+The `uiassist` feature is implemented as a state-toggle within the `Parser`.
+*   **State Management:** When `uiassist -on` is executed, the `Parser` sets an internal boolean `isUiAssistEnabled`.
+*   **Prompt-Driven Input:** Instead of expecting a single line of input, the `Parser` initiates a loop that prompts the user for individual fields:
+    1.  "Enter Date (DD/MM/YYYY):"
+    2.  "Enter Description:"
+    3.  "Enter Currency (SGD/USD/EUR):"
+    4.  "Enter Postings (e.g., 'Assets:Cash -50'). Type 'done' to finish."
+
+#### Design Considerations
+*   **Consistency:** The UI Assist mode uses the exact same validation logic as the manual mode. Whether a user uses the flags or the prompts, the same `DateValidator` and `BalanceChecker` are invoked.
+*   **Non-Blocking Toggles:** Users can toggle UI Assist off at any time. This allows power users to use flags for quick entries and UI Assist for complex transactions.
+
+#### Alternatives Considered
+*   **Alternative 1: Interactive CLI Menus (Arrow Keys):** Using a library like JLine to create selectable menus.
+    *   **Pros:** Very "modern" feel.
+    *   **Cons:** Heavy dependency on external libraries and may not work consistently across all terminal emulators (CMD vs. Bash).
+    *   **Decision:** Standard `System.out` prompts were used to ensure 100% compatibility across all operating systems and environments.
+*   **Alternative 2: Forced Guided Mode:** Making the app guided-only for all `add` commands.
+    *   **Pros:** No need to learn flags.
+    *   **Cons:** Frustrating for experienced users who can type a single-line command faster than answering four prompts.
+    *   **Decision:** The optional toggle `uiassist -on/-off` provides the best of both worlds.
 
 ## Appendix: Requirements
 

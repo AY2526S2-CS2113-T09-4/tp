@@ -1,34 +1,17 @@
 @startuml
-skinparam backgroundColor #EEEBDC
-skinparam sequence {
-    ParticipantBackgroundColor #FFF
-    ActorBackgroundColor #FFF
-    LifeLineBackgroundColor #FFF
-}
 actor User
 participant ":Parser" as Parser
-participant ":TransactionsList" as TransactionsList
-participant "t:Transaction" as Transaction
+participant ":TransactionsList" as List
+participant ":Transaction" as Trans
+participant ":Storage" as Store
 
-User -> Parser : processInput("edit 1 -a 100")
-activate Parser
-
-Parser -> TransactionsList : editTransaction(1, null, null, 100.0, null, null)
-activate TransactionsList
-
-TransactionsList -> TransactionsList : findById(1)
-activate TransactionsList
-TransactionsList --> TransactionsList : t
-deactivate TransactionsList
-
-TransactionsList -> Transaction : update(null, null, 100.0, null, null)
-activate Transaction
-Transaction --> TransactionsList
-deactivate Transaction
-
-TransactionsList --> Parser
-deactivate TransactionsList
-
-Parser --> User : "Transaction edited successfully."
-deactivate Parser
+User -> Parser : "edit 1 -desc NewDesc -p ..."
+Parser -> List : editTransaction(id, date, desc, postings, currency)
+List -> List : findById(1)
+List -> Trans : update(date, desc, postings, currency)
+Trans -> Trans : isBalanced()
+note right: Validation fails if\nAssets != Equity...
+Trans --> List : Success
+List -> Store : save(transactions)
+List --> User : "Transaction edited successfully"
 @enduml

@@ -1,0 +1,56 @@
+@startuml
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+
+actor User
+box "Controller Layer" #F9F9F9
+    participant ":Parser" as Parser
+    participant ":UiAssistFactory" as Assist
+endbox
+
+participant "scanner:Scanner" as Scanner
+participant ":TransactionsList" as List
+
+== Enabling UI Assist ==
+User -> Parser : "uiassist -on"
+Parser -> Parser : set isUiAssistOn = true
+Parser --> User : "UI Assist is now ON."
+
+== Guided Command Flow (e.g., Add) ==
+User -> Parser : "add"
+activate Parser
+
+alt isUiAssistOn == true && arguments.isEmpty()
+    Parser -> Assist : getInteractiveArguments("add", scanner)
+    activate Assist
+
+    Assist -> User : System.out.println("Manual Entry or Preset?")
+    User -> Scanner : "1" (Manual)
+    Scanner --> Assist : choice = 1
+
+    group "Interactive Loop"
+        Assist -> User : "Enter date (DD/MM/YYYY):"
+        User -> Scanner : "01/01/2026"
+        Scanner --> Assist : "01/01/2026"
+
+        Assist -> User : "Enter currency (SGD, USD, EUR):"
+        User -> Scanner : "SGD"
+        Scanner --> Assist : "SGD"
+        
+        note right of Assist : Logic builds flag string:\n"-date 01/01/2026 -c SGD"
+    end
+
+    Assist --> Parser : generatedArgs: "-date 01/01/2026 -c SGD -p..."
+    deactivate Assist
+
+    Parser -> User : "[Generated Command: add -date 01/01/2026...]"
+    note over Parser : Parser now treats the generated string \nas if the user typed it manually.
+end
+
+== Execution ==
+Parser -> Parser : processInput(generatedArgs)
+Parser -> List : addTransaction(newTransaction)
+List --> User : "Transaction added successfully"
+deactivate Parser
+
+@enduml

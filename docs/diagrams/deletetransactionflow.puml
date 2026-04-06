@@ -1,29 +1,21 @@
 @startuml
-skinparam backgroundColor #EEEBDC
-skinparam sequence {
-    ParticipantBackgroundColor #FFF
-    ActorBackgroundColor #FFF
-    LifeLineBackgroundColor #FFF
-}
 actor User
 participant ":Parser" as Parser
-participant ":TransactionsList" as TransactionsList
+participant ":TransactionsList" as List
+participant ":Storage" as Store
 
-User -> Parser : processInput("delete 1")
-activate Parser
+alt Single Delete
+    User -> Parser : "delete 5"
+    Parser -> List : deleteTransaction(5)
+else Bulk Delete
+    User -> Parser : "delete -match 'Lunch'"
+    Parser -> List : filterTransactions(...)
+    loop for each match
+        List -> List : remove(transaction)
+    end
+end
 
-Parser -> TransactionsList : deleteTransaction(1)
-activate TransactionsList
-
-TransactionsList -> TransactionsList : findById(1)
-activate TransactionsList
-TransactionsList --> TransactionsList : t
-deactivate TransactionsList
-
-TransactionsList -> TransactionsList : transactions.remove(t)
-TransactionsList --> Parser
-deactivate TransactionsList
-
-Parser --> User : "Transaction deleted successfully."
-deactivate Parser
+List -> Store : save(transactions)
+List -> List : refreshBalanceSheetCsv()
+List --> User : "Successfully deleted..."
 @enduml

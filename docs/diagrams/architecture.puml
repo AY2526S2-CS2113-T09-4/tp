@@ -1,0 +1,68 @@
+@startuml
+skinparam componentStyle uml2
+skinparam packageStyle rectangle
+
+title Ledger67 - Architecture Diagram
+
+package "UI / Controller Layer" {
+    [Parser] <<Controller>>
+    [UiAssistFactory] <<Helper>>
+}
+
+package "Logic / Domain Layer" {
+    [TransactionsList] <<Manager>>
+    [PresetHandler] <<Factory>>
+    [BalanceSheet] <<Reporter>>
+}
+
+package "Model Layer" {
+    [Transaction] <<Entity>>
+    [Posting] <<Value Object>>
+    [Account] <<Domain Logic>>
+}
+
+package "Currency Subsystem" {
+    [CurrencyConverter]
+    [LiveExchangeRateService] <<API Client>>
+    [CurrencyValidator]
+    [ExchangeRateData] <<DTO>>
+}
+
+package "Persistence Layer" {
+    [Storage] <<TSV Handler>>
+    [ExchangeRateStorage] <<JSON Handler>>
+}
+
+database "File System" {
+    [ledger.txt] <<Transactions>>
+    [exchange-rates.json] <<Cache>>
+    [balance-sheet.csv] <<Export>>
+}
+
+cloud "External Services" {
+    [Frankfurter.dev API]
+}
+
+' Interactions
+[Parser] --> [UiAssistFactory] : interactive prompts
+[Parser] --> [TransactionsList] : CRUD operations
+[Parser] --> [PresetHandler] : resolves shorthand
+[Parser] --> [CurrencyConverter] : view-mode conversion
+
+[TransactionsList] "1" *-- "many" [Transaction] : manages
+[TransactionsList] --> [BalanceSheet] : triggers reports
+[TransactionsList] --> [Storage] : persists data
+
+[Transaction] "1" *-- "many" [Posting] : double-entry
+[Posting] --> [Account] : uses hierarchy
+[Transaction] --> [CurrencyValidator] : validates
+
+[BalanceSheet] ..> [balance-sheet.csv] : exports
+[Storage] ..> [ledger.txt] : read/write
+
+[CurrencyConverter] --> [ExchangeRateData] : uses
+[LiveExchangeRateService] --> [Frankfurter.dev API] : fetches rates
+[ExchangeRateStorage] ..> [exchange-rates.json] : read/write
+[LiveExchangeRateService] ..> [ExchangeRateData] : parses
+
+@enduml
