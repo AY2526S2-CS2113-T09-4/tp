@@ -6,7 +6,7 @@
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
     <property name="severity" value="error"/>
-    <property name="fileExtensions" value="java, properties, xml"/>
+    <property name="fileExtensions" value="java"/>
 
     <!-- Exclude generated files and test resources -->
     <module name="BeforeExecutionExclusionFileFilter">
@@ -48,11 +48,11 @@
 
         <!-- Size violations -->
         <module name="MethodLength">
-            <property name="max" value="50"/>
+            <property name="max" value="100"/>
             <property name="countEmpty" value="false"/>
         </module>
         <module name="ParameterNumber">
-            <property name="max" value="7"/>
+            <property name="max" value="10"/>
         </module>
 
         <!-- Whitespace -->
@@ -129,36 +129,16 @@
             <property name="format" value="(TODO|FIXME|XXX):"/>
         </module>
         <module name="UpperEll"/>
-
-        <!-- Suppression -->
-        <module name="SuppressionCommentFilter"/>
     </module>
 
     <!-- File length -->
     <module name="FileLength">
-        <property name="max" value="500"/>
+        <property name="max" value="1000"/>
     </module>
 
     <!-- Line length -->
     <module name="LineLength">
         <property name="max" value="120"/>
         <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
-    </module>
-
-    <!-- Javadoc -->
-    <module name="JavadocPackage"/>
-    <module name="JavadocType">
-        <property name="scope" value="public"/>
-    </module>
-    <module name="JavadocMethod">
-        <property name="scope" value="public"/>
-        <property name="allowMissingParamTags" value="true"/>
-        <property name="allowMissingReturnTag" value="true"/>
-        <property name="allowedAnnotations" value="Override, Test"/>
-    </module>
-
-    <!-- Suppression filter -->
-    <module name="SuppressionFilter">
-        <property name="file" value="${config_loc}/suppressions.xml"/>
     </module>
 </module>

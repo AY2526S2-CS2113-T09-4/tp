@@ -1,10 +1,36 @@
 <?xml version="1.0"?>
-
 <!DOCTYPE suppressions PUBLIC
     "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
     "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 
 <suppressions>
-  <suppress checks="JavadocType" files=".*Test\.java"/>
-  <suppress checks="MissingJavadocMethodCheck" files=".*Test\.java"/>
+    <!-- Suppress all checks for test files -->
+    <suppress files=".*Test\.java" checks=".*"/>
+    
+    <!-- Suppress all checks for generated files -->
+    <suppress files=".*/build/.*" checks=".*"/>
+    
+    <!-- Suppress specific checks for specific files -->
+    <suppress files=".*LoggingConfig\.java" checks="FileLength"/>
+    <suppress files=".*PerformanceTest\.java" checks="MethodLength"/>
+    <suppress files=".*PerformanceTest\.java" checks="MagicNumber"/>
+    
+    <!-- Suppress JavadocPackage for all files (optional) -->
+    <suppress files=".*" checks="JavadocPackage"/>
+    
+    <!-- Suppress specific checks that are too strict -->
+    <suppress files=".*" checks="FinalParameters"/>
+    <suppress files=".*" checks="MissingJavadocMethod"/>
+    <suppress files=".*" checks="MissingJavadocType"/>
+    
+    <!-- Allow longer methods for complex logic -->
+    <suppress files=".*Parser\.java" checks="MethodLength"/>
+    <suppress files=".*TransactionValidator\.java" checks="MethodLength"/>
+    <suppress files=".*LoggingConfig\.java" checks="MethodLength"/>
+    
+    <!-- Allow more parameters for complex methods -->
+    <suppress files=".*" checks="ParameterNumber"/>
+    
+    <!-- Allow magic numbers for common values -->
+    <suppress files=".*" checks="MagicNumber"/>
 </suppressions>

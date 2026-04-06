@@ -750,6 +750,155 @@ public boolean isUnder(String parentAccount)
 #### Sequence Diagram
 ![Hierarchical Account Registry & Filtering Feature Diagram](diagrams/HierachalAccRegFiltering.png)
 
+### Quality Assurance and Logging Enhancements
+Implementer: Chingy
+
+This contribution focuses on improving code quality, maintainability, and debugging capabilities through comprehensive logging, error recovery, testing, and quality metrics.
+
+---
+
+#### 1. Enhanced Logging System
+Implemented a structured logging system to improve debugging and monitoring capabilities.
+
+**Key Components:**
+* **LoggingConfig**: Centralized logging configuration with JSON-formatted output
+* **User Action Tracking**: Logs all user commands with timestamps and parameters
+* **Structured Log Output**: JSON format for easy parsing and analysis
+* **File-based Logging**: Logs stored in `logs/ledger67.log` for persistence
+
+**Implementation Details:**
+* **JSON Formatter**: Custom `JsonFormatter` class for structured log output
+* **Log Levels**: Different log levels (INFO, WARNING, ERROR) for appropriate verbosity
+* **User Action Method**: `userAction()` method for consistent user command logging
+* **Automatic Setup**: Logging system initialized at application startup
+
+**Benefits:**
+* Improved debugging with structured log data
+* Better monitoring of user interactions
+* Easier troubleshooting of production issues
+* Consistent log format across all components
+
+---
+
+#### 2. Enhanced Error Recovery and Validation
+Implemented comprehensive error recovery and validation to improve user experience and data integrity.
+
+**Key Components:**
+* **TransactionValidator**: Comprehensive validation with auto-correction suggestions
+* **ValidationResult**: Structured validation results with warnings and suggestions
+* **AutoCorrector**: Intelligent auto-correction for common input errors
+* **Enhanced Error Messages**: User-friendly error messages with correction suggestions
+
+**Implementation Details:**
+* **Multi-stage Validation**: Validates date, description, currency, postings, and accounting equation
+* **Auto-correction**: Suggests corrections for common errors (date format, currency codes, account names)
+* **Validation Reports**: Detailed validation reports with actionable feedback
+* **Common Issue Detection**: Detects and warns about common accounting issues
+
+**Benefits:**
+* Reduced user frustration with helpful error messages
+* Improved data integrity through comprehensive validation
+* Faster error resolution with auto-correction suggestions
+* Better user guidance for complex accounting concepts
+
+---
+
+#### 3. Enhanced Testing Framework
+Implemented comprehensive testing including performance tests to ensure system reliability.
+
+**Key Components:**
+* **PerformanceTest**: Comprehensive performance testing suite
+* **Quality Metrics**: Code coverage and quality checks
+* **Build Integration**: Automated testing in build pipeline
+
+**Performance Test Coverage:**
+* **Transaction Filtering**: Tests filtering performance with large datasets (10,000+ transactions)
+* **Balance Sheet Generation**: Tests balance sheet generation performance
+* **Memory Usage**: Monitors memory consumption with large transaction volumes
+* **Stress Testing**: Stress tests with concurrent operations
+* **Validation Performance**: Tests transaction validation performance
+
+**Implementation Details:**
+* **Gradle Integration**: Performance tests integrated into build system
+* **Separate Test Task**: `performanceTest` task for performance-specific tests
+* **Realistic Data Generation**: Generates realistic test data for performance testing
+* **Performance Metrics**: Measures execution time and memory usage
+
+**Benefits:**
+* Ensures system performance with large datasets
+* Identifies performance bottlenecks early
+* Provides confidence in system scalability
+* Monitors resource usage patterns
+
+---
+
+#### 4. Code Quality Metrics and Automation
+Implemented comprehensive code quality metrics and automated quality checks.
+
+**Key Components:**
+* **Checkstyle**: Code style enforcement with lenient configuration
+* **PMD**: Static code analysis for common programming flaws
+* **SpotBugs**: Bug pattern detection
+* **JaCoCo**: Code coverage analysis
+* **Gradle Tasks**: Automated quality assurance tasks
+
+**Implementation Details:**
+* **Quality Assurance Task**: `qualityAssurance` task runs all quality checks
+* **Comprehensive Build**: `comprehensiveBuild` task includes all tests and quality checks
+* **Configuration Files**: Custom configurations for each quality tool
+* **Coverage Requirements**: 45% minimum code coverage requirement
+
+**Quality Tools Configuration:**
+* **Checkstyle**: Lenient configuration for development, strict for production
+* **PMD**: Custom ruleset focusing on critical issues
+* **SpotBugs**: Exclusion filters for false positives
+* **JaCoCo**: Coverage verification with reasonable thresholds
+
+**Benefits:**
+* Consistent code quality across the codebase
+* Early detection of potential issues
+* Automated quality enforcement
+* Measurable quality metrics
+
+---
+
+#### 5. Build System Enhancements
+Enhanced the Gradle build system for better development workflow.
+
+**Key Enhancements:**
+* **Quality Assurance Pipeline**: Integrated quality checks into build process
+* **Performance Testing**: Separate performance test execution
+* **Coverage Reporting**: Automated coverage reports
+* **Task Organization**: Well-organized Gradle tasks for different purposes
+
+**Gradle Tasks:**
+* `qualityAssurance`: Runs all code quality checks
+* `comprehensiveBuild`: Full build including tests and quality checks
+* `performanceTest`: Runs performance tests separately
+* `jacocoTestReport`: Generates code coverage reports
+
+**Benefits:**
+* Streamlined development workflow
+* Automated quality enforcement
+* Comprehensive testing pipeline
+* Better developer experience
+
+---
+
+#### Design Considerations
+* **Progressive Enhancement**: Quality tools configured with reasonable defaults
+* **Developer Experience**: Focus on helpful feedback rather than blocking development
+* **Performance Focus**: Emphasis on system performance and scalability
+* **Maintainability**: Code structured for easy maintenance and extension
+
+---
+
+#### Impact on Development Process
+* **Improved Code Quality**: Consistent code style and fewer bugs
+* **Better Debugging**: Enhanced logging for easier troubleshooting
+* **Performance Confidence**: Performance testing ensures system scalability
+* **Automated Quality**: Quality checks integrated into development workflow
+* **Comprehensive Testing**: Both functional and performance testing coverage
 
 ### UI Improvements and Assistance
 **Implementer: Pran**

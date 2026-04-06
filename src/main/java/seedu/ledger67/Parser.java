@@ -1,7 +1,6 @@
 package seedu.ledger67;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,7 +53,7 @@ public class Parser {
         while (true) {
             System.out.print("Enter Command: ");
             
-            if(!scanner.hasNextLine()){
+            if (!scanner.hasNextLine()) {
                 break;
             }
             
@@ -256,7 +255,7 @@ public class Parser {
         }
     }
 
-    private Map<String, List<String>> parseArguments(String args) {
+    public static Map<String, List<String>> parseArguments(String args) {
         Map<String, List<String>> map = new HashMap<>();
         // Your regex split is good; it looks for " -letter"
         String[] tokens = (" " + args).split("(?=\\s-[a-zA-Z])");
@@ -383,15 +382,14 @@ public class Parser {
         List<Transaction> results = new ArrayList<>(list.getTransactions());
 
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate start = (startStr != null) ? LocalDate.parse(startStr, formatter) : null;
-            LocalDate end = (endStr != null) ? LocalDate.parse(endStr, formatter) : null;
+            LocalDate start = (startStr != null) ? LocalDate.parse(startStr, Config.DATE_FORMATTER) : null;
+            LocalDate end = (endStr != null) ? LocalDate.parse(endStr, Config.DATE_FORMATTER) : null;
 
             results = TransactionsList.filterTransactionsByDate(results, start, end);
             results = TransactionsList.filterTransactionsByRegex(results, regex);
             results = TransactionsList.filterTransactionsByAccount(results, acc);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Dates must be in DD/MM/YYYY format.");
+            throw new IllegalArgumentException(Config.ERROR_INVALID_DATE_FORMAT);
         }
 
         list.renderTransactions(results);
@@ -441,15 +439,14 @@ public class Parser {
 
         List<Transaction> toDelete = new ArrayList<>(list.getTransactions());
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            LocalDate start = (startStr != null) ? LocalDate.parse(startStr, formatter) : null;
-            LocalDate end = (endStr != null) ? LocalDate.parse(endStr, formatter) : null;
+            LocalDate start = (startStr != null) ? LocalDate.parse(startStr, Config.DATE_FORMATTER) : null;
+            LocalDate end = (endStr != null) ? LocalDate.parse(endStr, Config.DATE_FORMATTER) : null;
 
             toDelete = TransactionsList.filterTransactionsByDate(toDelete, start, end);
             toDelete = TransactionsList.filterTransactionsByRegex(toDelete, regex);
             toDelete = TransactionsList.filterTransactionsByAccount(toDelete, acc);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Dates must be in DD/MM/YYYY format.");
+            throw new IllegalArgumentException(Config.ERROR_INVALID_DATE_FORMAT);
         }
 
         

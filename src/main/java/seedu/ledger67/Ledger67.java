@@ -1,13 +1,25 @@
 package seedu.ledger67;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class Ledger67 {
+    private static final Logger logger = Logger.getLogger(Ledger67.class.getName());
+    
     /**
-     * Main entry-point for the Duke application.
+     * Main entry-point for the Ledger67 application.
      */
     public static void main(String[] args) {
+        // Initialize enhanced logging
+        LoggingConfig.setup();
+        
+        logger.info(() -> String.format("Ledger67 application starting - timestamp: %s, args: %s",
+            LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            Arrays.toString(args)));
         String rawLogo = """
                  /$$                       /$$                                /$$$$$$  /$$$$$$$$
                 | $$                      | $$                               /$$__  $$|_____ $$/
@@ -33,10 +45,10 @@ public class Ledger67 {
         System.out.println("Example: Assets:Cash or Income:Job");
 
 
-        Storage storage = new Storage("data/ledger.txt");
+        Storage storage = new Storage(Config.TRANSACTIONS_FILE_PATH);
         TransactionsList transactionList = new TransactionsList(storage);
 
-        ExchangeRateStorage exchangeRateStorage = new ExchangeRateStorage("data/exchange-rates.json");
+        ExchangeRateStorage exchangeRateStorage = new ExchangeRateStorage(Config.EXCHANGE_RATES_FILE_PATH);
         LiveExchangeRateService liveExchangeRateService = new LiveExchangeRateService();
 
         ExchangeRateData rateData;
