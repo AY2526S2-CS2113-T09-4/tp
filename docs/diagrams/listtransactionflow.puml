@@ -1,23 +1,22 @@
 @startuml
-skinparam backgroundColor #EEEBDC
-skinparam sequence {
-    ParticipantBackgroundColor #FFF
-    ActorBackgroundColor #FFF
-    LifeLineBackgroundColor #FFF
-}
 actor User
 participant ":Parser" as Parser
-participant ":TransactionsList" as TransactionsList
+participant ":TransactionsList" as List
+participant ":CurrencyConverter" as Converter
 
-User -> Parser : processInput("list")
-activate Parser
+User -> Parser : "list -acc Expenses -to USD"
+Parser -> List : filterTransactionsByDate(...)
+Parser -> List : filterTransactionsByRegex(...)
+Parser -> List : filterTransactionsByAccount("Expenses")
+List --> Parser : List<Transaction> (filtered)
 
-Parser -> TransactionsList : listTransactions()
-activate TransactionsList
+Parser -> List : renderTransactions(results)
+loop for each transaction
+    List -> Converter : convert(amount, from, "USD")
+    Converter --> List : convertedAmount
+    List -> User : Print ID, Date, Postings (Display: USD)
+end
 
-TransactionsList --> Parser : (prints transactions to console)
-deactivate TransactionsList
-
-Parser --> User
-deactivate Parser
+Parser -> Parser : setPendingState(target: "USD", fromList: true)
+Parser --> User : "Type 'confirm all' to store conversions"
 @enduml

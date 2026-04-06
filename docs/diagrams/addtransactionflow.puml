@@ -1,25 +1,26 @@
 @startuml
-skinparam backgroundColor #EEEBDC
-skinparam sequence {
-    ParticipantBackgroundColor #FFF
-    ActorBackgroundColor #FFF
-    LifeLineBackgroundColor #FFF
-}
 actor User
 participant ":Parser" as Parser
-participant "t:Transaction" as Transaction
-participant ":TransactionsList" as TransactionsList
+participant ":UiAssistFactory" as UI
+participant ":PresetHandler" as Preset
+participant ":Transaction" as Trans
+participant ":TransactionsList" as List
+participant ":Storage" as Store
 
-User -> Parser : processInput("add -d 18/03/2026 -a 50 ...")
-activate Parser
+User -> Parser : "add -date ... -preset ..."
+alt UI Assist Enabled
+    Parser -> UI : getInteractiveArguments("add")
+    UI --> Parser : generated command string
+end
 
-Parser -> Transaction ** : new Transaction(date, desc, amount, type, currency)
+Parser -> Preset : generatePostings(presetData)
+Preset --> Parser : List<Posting>
 
-Parser -> TransactionsList : addTransaction(t)
-activate TransactionsList
-TransactionsList --> Parser
-deactivate TransactionsList
-
-Parser --> User : "Transaction added successfully."
-deactivate Parser
+Parser -> Trans ** : new Transaction(date, desc, postings, currency)
+Parser -> List : addTransaction(t)
+List -> Trans : isBalanced()
+Trans --> List : true
+List -> Store : save(transactions)
+List -> List : refreshBalanceSheetCsv()
+List --> User : "Transaction added successfully"
 @enduml
