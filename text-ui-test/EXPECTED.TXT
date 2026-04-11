@@ -16,6 +16,12 @@ Balanced means that the LEFT side = RIGHT side of this equation:
 Assets = Equity - Liabilities + (Income - Expenses)
 Valid Root Accounts: assets, liabilities, equity, income, expenses
 Example: Assets:Cash or Income:Job
+Warning: Unable to load exchange rates from file.
+Using fallback exchange rates instead. Conversions may be outdated.
+Base currency: EUR
+  EUR -> SGD = 1.46
+  EUR -> USD = 1.09
+Run 'rates refresh' to fetch the latest live exchange rates.
 Enter Command: === Ledger67 Help ===
 Available commands:
 

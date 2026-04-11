@@ -52,10 +52,24 @@ public class Ledger67 {
         LiveExchangeRateService liveExchangeRateService = new LiveExchangeRateService();
 
         ExchangeRateData rateData;
+        boolean usingFallbackRates = false;
+
         try {
             rateData = exchangeRateStorage.load();
+            System.out.println("Exchange rates loaded successfully from local storage dated "
+                    + rateData.getDate() + ".");
         } catch (RuntimeException e) {
             rateData = createFallbackRateData();
+            usingFallbackRates = true;
+            System.out.println("Warning: Unable to load exchange rates from file.");
+            System.out.println("Using fallback exchange rates instead. Conversions may be outdated.");
+            System.out.println("Base currency: " + rateData.getBase());
+
+            for (Map.Entry<String, Double> entry : rateData.getRates().entrySet()) {
+                System.out.println("  " + rateData.getBase() + " -> " + entry.getKey() + " = " + entry.getValue());
+            }
+
+            System.out.println("Run 'rates refresh' to fetch the latest live exchange rates.");
         }
 
         CurrencyConverter converter = new CurrencyConverter(rateData);
@@ -72,6 +86,6 @@ public class Ledger67 {
         rates.put("SGD", 1.46);
         rates.put("USD", 1.09);
 
-        return new ExchangeRateData("EUR", "fallback", rates);
+        return new ExchangeRateData("EUR", "fallback-static", rates);
     }
 }
