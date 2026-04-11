@@ -86,13 +86,7 @@ Available commands:
 10. rates - Refresh live exchange rates
     Format: rates refresh
 
-11. help - Show this help message
-    Format: help
-
-12. exit - Exit the application
-    Format: exit
-
-14. balance - Generate Balance Sheet
+11. balance - Generate Balance Sheet
     Format: balance
     Optional A: balance -to CURRENCY
     Optional B: balance -acc ACCOUNT
@@ -100,9 +94,15 @@ Available commands:
     Example: balance -to USD
     Example: balance -acc Assets:Bank
 
-15. uiassist - Turn on/off UI Assistance
+12. uiassist - Turn on/off UI Assistance
     Format: uiassist -on/off
     With UI Assistance on, the program will guide the user through using prompted inputs
+
+13. help - Show this help message
+    Format: help
+
+14. exit - Exit the application
+    Format: exit
 
 === Additional Information ===
 - DATE format: DD/MM/YYYY (e.g., 18/03/2026)

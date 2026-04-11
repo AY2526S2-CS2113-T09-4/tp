@@ -700,15 +700,7 @@ public class Parser {
         System.out.println("    Format: rates refresh");
         System.out.println();
 
-        System.out.println("11. help - Show this help message");
-        System.out.println("    Format: help");
-        System.out.println();
-
-        System.out.println("12. exit - Exit the application");
-        System.out.println("    Format: exit");
-        System.out.println();
-
-        System.out.println("14. balance - Generate Balance Sheet");
+        System.out.println("11. balance - Generate Balance Sheet");
         System.out.println("    Format: balance");
         System.out.println("    Optional A: balance -to CURRENCY");
         System.out.println("    Optional B: balance -acc ACCOUNT");
@@ -717,9 +709,17 @@ public class Parser {
         System.out.println("    Example: balance -acc Assets:Bank");
         System.out.println();
 
-        System.out.println("15. uiassist - Turn on/off UI Assistance");
+        System.out.println("12. uiassist - Turn on/off UI Assistance");
         System.out.println("    Format: uiassist -on/off");
         System.out.println("    With UI Assistance on, the program will guide the user through using prompted inputs");
+        System.out.println();
+
+        System.out.println("13. help - Show this help message");
+        System.out.println("    Format: help");
+        System.out.println();
+
+        System.out.println("14. exit - Exit the application");
+        System.out.println("    Format: exit");
         System.out.println();
 
         System.out.println("=== Additional Information ===");
