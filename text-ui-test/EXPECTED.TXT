@@ -298,7 +298,7 @@ CHECK
   Equation Status                             FILTERED VIEW (may not balance)
 =========================
 Enter Command: Enter Command: Error: Missing transaction ID or filter flags to delete.
-Enter Command: Error: No valid filters provided. Use -begin, -end, or -match.
+Enter Command: Error: No valid filters provided. Use -begin, -end, -match, or -acc.
 Enter Command: Successfully deleted 1 transaction(s) matching criteria.
 Enter Command: Enter Command: Successfully deleted 1 transaction(s) matching criteria.
 Enter Command: Error: null

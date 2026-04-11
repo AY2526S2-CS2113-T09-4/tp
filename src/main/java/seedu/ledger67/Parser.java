@@ -440,10 +440,9 @@ public class Parser {
         String regex = getFirstElementFromMap(map, "-match");
 
 
-        if (startStr == null && endStr == null && regex == null) {
-            throw new IllegalArgumentException("No valid filters provided. Use -begin, -end, or -match.");
+        if (startStr == null && endStr == null && regex == null && acc == null) {
+            throw new IllegalArgumentException("No valid filters provided. Use -begin, -end, -match, or -acc.");
         }
-
 
         List<Transaction> toDelete = new ArrayList<>(list.getTransactions());
         try {
