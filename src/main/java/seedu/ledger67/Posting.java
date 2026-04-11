@@ -6,6 +6,11 @@ public class Posting {
 
     public Posting(String accountName, double amount) {
         this.account = new Account(accountName);
+
+        if (Math.abs(amount) < 0.0000001) {
+            throw new IllegalArgumentException("Posting amount cannot be zero.");
+        }
+
         this.amount = amount;
     }
 
