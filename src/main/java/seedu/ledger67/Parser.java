@@ -306,6 +306,24 @@ public class Parser {
         return value;
     }
 
+    private void warnForDuplicateFlags(Map<String, List<String>> map, String... flags) {
+        for (String flag : flags) {
+            List<String> values = map.get(flag);
+            if (values != null && values.size() > 1) {
+                String firstValue = getFirstElementFromMap(map, flag);
+                if (firstValue == null || firstValue.isBlank()) {
+                    System.out.printf(
+                            "Warning: Duplicate flag '%s' detected. Using the first occurrence.%n",
+                            flag);
+                } else {
+                    System.out.printf(
+                            "Warning: Duplicate flag '%s' detected. Using the first value: %s%n",
+                            flag, firstValue);
+                }
+            }
+        }
+    }
+
     public static List<Posting> convertStringList2PostingList(List<String> postingStrings) {
         List<Posting> converted = new ArrayList<>();
         for (String pStr : postingStrings) {
@@ -335,6 +353,7 @@ public class Parser {
 
     private void handleAdd(String args) {
         Map<String, List<String>> map = parseArguments(args);
+        warnForDuplicateFlags(map, "-date", "-desc", "-c", "-preset");
         String date = getFirstElementFromMap(map, "-date");
         String desc = getFirstElementFromMap(map, "-desc");
         String currency = getFirstElementFromMap(map, "-c");
@@ -370,6 +389,8 @@ public class Parser {
         clearPendingConfirmation();
 
         Map<String, List<String>> map = parseArguments(args);
+        warnForDuplicateFlags(map, "-to", "-acc", "-match", "-begin", "-end");
+
         String to = getFirstElementFromMap(map, "-to");
         String acc = getFirstElementFromMap(map, "-acc");
         String regex = getFirstElementFromMap(map, "-match");
@@ -434,6 +455,8 @@ public class Parser {
 
         // 2. Handle Filtered Deletion
         Map<String, List<String>> map = parseArguments(args);
+        warnForDuplicateFlags(map, "-acc", "-begin", "-end", "-match");
+
         String acc = getFirstElementFromMap(map, "-acc");
         String startStr = getFirstElementFromMap(map, "-begin");
         String endStr = getFirstElementFromMap(map, "-end");
@@ -491,6 +514,8 @@ public class Parser {
         }
 
         Map<String, List<String>> map = parseArguments(editArgs);
+        warnForDuplicateFlags(map, "-date", "-desc", "-c");
+
         String date = getFirstElementFromMap(map, "-date");
         String desc = getFirstElementFromMap(map, "-desc");
         List<String> postingStrings = map.get("-p");
@@ -513,6 +538,7 @@ public class Parser {
         }
 
         Map<String, List<String>> map = parseArguments(args);
+        warnForDuplicateFlags(map, "-a", "-from", "-to");
 
         String amountStr = getFirstElementFromMap(map, "-a");
         String from = getFirstElementFromMap(map, "-from");
@@ -553,6 +579,8 @@ public class Parser {
 
         String convertArgs = parts.length > 1 ? parts[1] : "";
         Map<String, List<String>> map = parseArguments(convertArgs);
+        warnForDuplicateFlags(map, "-to");
+
         String to = getFirstElementFromMap(map, "-to");
 
         if (to == null) {
@@ -596,6 +624,8 @@ public class Parser {
 
     private void handleBalance(String args) {
         Map<String, List<String>> map = parseArguments(args);
+        warnForDuplicateFlags(map, "-to", "-acc");
+
         String to = getFirstElementFromMap(map, "-to");
         String acc = getFirstElementFromMap(map, "-acc");
 

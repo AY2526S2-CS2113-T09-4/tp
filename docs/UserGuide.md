@@ -145,7 +145,7 @@ add -date 18/03/2026 -desc "Office supplies" -p "Assets:Cash -45.50" -p "Expense
 
 **Notes**
 - Account roots are not case-sensitive
-- Sub-account names are case-sensitive, this is to preserve acronyms and other valid mixed-cased names. 
+- Sub-account names are case-sensitive, this is to preserve acronyms and other valid mixed-cased names.
 
 **Example**
 ```
@@ -613,6 +613,10 @@ Every transaction must include at least two postings, and the system ensures tha
 - Total debits = total credits
 
 Transactions that do not balance will be rejected.
+
+**Q**: How does Ledger67 handle duplicate single value flags?
+
+**A**: If a duplicate single-value flag is provided, the first input will be chosen.
 
 ## Command Summary
 
