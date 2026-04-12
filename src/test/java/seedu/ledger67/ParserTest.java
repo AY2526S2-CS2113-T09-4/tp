@@ -482,4 +482,24 @@ public class ParserTest {
         assertEquals(first.getId() + 1, second.getId());
     }
 
+    @Test
+    public void testEditCommandRejectsUnbalancedPostingsAndAllowsLaterBalancedEdit() {
+        Transaction t = createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD");
+        list.addTransaction(t);
+        int id = t.getId();
+
+        outputStreamCaptor.reset();
+        String input = "edit " + id + " -p \"Expenses:Food 10\"\n"
+                + "edit " + id + " -desc Tea -p \"Expenses:Food 10\" -p \"Assets:Cash -10\"\n"
+                + "list\n"
+                + "exit";
+
+        runParserWithInput(input);
+
+        String output = outputStreamCaptor.toString();
+        assertTrue(output.contains("Error: Update failed: Transaction is unbalanced."));
+        assertTrue(output.contains("Transaction edited successfully."));
+        assertTrue(output.contains("Tea"));
+    }
+
 }

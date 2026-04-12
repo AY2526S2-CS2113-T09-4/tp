@@ -95,4 +95,58 @@ public class TransactionTest {
         Assertions.assertEquals(firstId + 1, secondId);
     }
 
+    @Test
+    public void testUpdateTransactionWithUnbalancedPostingsThrowsException() {
+        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
+
+        List<Posting> unbalancedPostings = new ArrayList<>();
+        unbalancedPostings.add(new Posting("Expenses:General", 60.0));
+
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            t.update(null, null, unbalancedPostings, null);
+        });
+
+        Assertions.assertEquals("Update failed: Transaction is unbalanced.", exception.getMessage());
+    }
+
+    @Test
+    public void testFailedUnbalancedEditDoesNotCorruptTransaction() {
+        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
+
+        List<Posting> unbalancedPostings = new ArrayList<>();
+        unbalancedPostings.add(new Posting("Expenses:General", 60.0));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            t.update(null, null, unbalancedPostings, null);
+        });
+
+        Assertions.assertTrue(t.isBalanced());
+        Assertions.assertTrue(t.toString().contains("50.00"));
+    }
+
+    @Test
+    public void testBalancedEditStillWorksAfterFailedEdit() {
+        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
+
+        List<Posting> unbalancedPostings = new ArrayList<>();
+        unbalancedPostings.add(new Posting("Expenses:General", 60.0));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            t.update(null, null, unbalancedPostings, null);
+        });
+
+        List<Posting> balancedPostings = new ArrayList<>();
+        balancedPostings.add(new Posting("Expenses:General", 60.0));
+        balancedPostings.add(new Posting("Assets:Cash", -60.0));
+
+        Assertions.assertDoesNotThrow(() -> {
+            t.update(null, "Updated Grocery", balancedPostings, null);
+        });
+
+        Assertions.assertTrue(t.isBalanced());
+        Assertions.assertTrue(t.toString().contains("Updated Grocery"));
+        Assertions.assertTrue(t.toString().contains("60.00"));
+    }
+
+
 }

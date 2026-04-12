@@ -63,6 +63,14 @@ public class Transaction {
         return Math.abs(sum) < 0.0001; // Avoid floating point precision issues
     }
 
+    private boolean isBalancedPostings(List<Posting> postingsToCheck) {
+        double sum = 0;
+        for (Posting p : postingsToCheck) {
+            sum += p.getInternalAmount();
+        }
+        return Math.abs(sum) < 0.0001;
+    }
+
     public List<Posting> getPostings() {
         return postings;
     }
@@ -118,6 +126,7 @@ public class Transaction {
         if (dateStr != null) {
             this.date = parseDate(dateStr);
         }
+
         if (description != null) {
             if (description.trim().isEmpty()) {
                 throw new IllegalArgumentException("Description cannot be empty.");
@@ -126,20 +135,17 @@ public class Transaction {
         }
 
         if (newPostings != null && !newPostings.isEmpty()) {
-            // Fundamental check: After an update, the transaction MUST still balance
-            if (!isBalanced()) {
+            if (!isBalancedPostings(newPostings)) {
                 throw new IllegalArgumentException("Update failed: Transaction is unbalanced.");
             }
+
             this.postings.clear();
             this.postings.addAll(newPostings);
-            
         }
 
         if (currencyStr != null) {
             this.currency = CurrencyValidator.validateAndGet(currencyStr);
         }
-
-        
     }
 
     @Override
