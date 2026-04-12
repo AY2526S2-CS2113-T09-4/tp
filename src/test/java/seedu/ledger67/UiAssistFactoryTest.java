@@ -19,7 +19,7 @@ public class UiAssistFactoryTest {
     public void getInteractiveArguments_addManual_returnsCorrectFlags() {
         // Sequence: 1 (Manual), 01/01/2024 (Date), SGD (Curr), Dinner (Desc),
         // Assets:Cash -10 (Posting), [Enter] (Finish)
-        String input = "1\n01/01/2024\nSGD\nDinner\nAssets:Cash -10\n\n";
+        String input = "1\n01/01/2024\nSGD\nDinner\n2\nAssets:Cash -10\nExpenses:Food 10\n";
         Scanner scanner = createScanner(input);
 
         String result = UiAssistFactory.getInteractiveArguments("add", scanner);
@@ -28,6 +28,7 @@ public class UiAssistFactoryTest {
         assertTrue(result.contains("-c SGD"));
         assertTrue(result.contains("-desc Dinner"));
         assertTrue(result.contains("-p \"Assets:Cash -10\""));
+        assertTrue(result.contains("-p \"Expenses:Food 10\""));
     }
 
     @Test
@@ -100,7 +101,7 @@ public class UiAssistFactoryTest {
         // 5. Overwrite Postings: y
         // 6. Posting: Food 20.00
         // 7. Stop: [Enter]
-        String input = "10\n02/02/2025\nNewLunch\nEUR\ny\nFood 20.00\n\n";
+        String input = "10\n02/02/2025\nNewLunch\nEUR\ny\n2\nFood 20.00\nAssets:Cash -20.00\n";
         Scanner scanner = createScanner(input);
 
         String result = UiAssistFactory.getInteractiveArguments("edit", scanner);
@@ -110,6 +111,7 @@ public class UiAssistFactoryTest {
         assertTrue(result.contains("-desc NewLunch"));
         assertTrue(result.contains("-c EUR"));
         assertTrue(result.contains("-p \"Food 20.00\""));
+        assertTrue(result.contains("-p \"Assets:Cash -20.00\""));
     }
 
     @Test

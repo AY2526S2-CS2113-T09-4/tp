@@ -51,13 +51,27 @@ public class UiAssistFactory {
 
             System.out.println("\n--- Enter Postings (Format: AccountName Amount) ---");
             System.out.println("Example: Assets:Cash -50.00");
-            System.out.println("Leave blank and press Enter to stop adding postings.");
+            System.out.println("Each transaction must have at least 2 postings.");
+
+            int postingCount;
             while (true) {
-                System.out.print("Posting: ");
-                String posting = scanner.nextLine().trim();
-                if (posting.isEmpty()) {
-                    break;
+                System.out.print("How many postings do you want to enter? ");
+                String input = scanner.nextLine().trim();
+
+                try {
+                    postingCount = Integer.parseInt(input);
+                    if (postingCount >= 2) {
+                        break;
+                    }
+                } catch (NumberFormatException e) {
+                    // fall through to error message below
                 }
+
+                System.out.println("Please enter a valid integer of at least 2.");
+            }
+
+            for (int i = 1; i <= postingCount; i++) {
+                String posting = askRequiredValue(scanner, "Enter posting " + i);
                 args.append(" -p \"").append(posting).append("\"");
             }
         } else {
@@ -115,7 +129,7 @@ public class UiAssistFactory {
         StringBuilder args = new StringBuilder();
 
         String id = askRequiredValue(scanner, "Enter Transaction ID to edit");
-        args.append(id); // ID goes first, e.g., "1 -desc NewDesc"
+        args.append(id);
 
         System.out.println("\n--- Leave fields blank and press Enter to keep existing values ---");
         args.append(askOptionalFlag(scanner, "New Date (DD/MM/YYYY)", "-date"));
@@ -124,14 +138,30 @@ public class UiAssistFactory {
 
         System.out.print("Do you want to overwrite all postings? (y/N): ");
         String overwrite = scanner.nextLine().trim();
+
         if (overwrite.equalsIgnoreCase("y") || overwrite.equalsIgnoreCase("yes")) {
             System.out.println("\n--- Enter NEW Postings (Format: AccountName Amount) ---");
+            System.out.println("Each transaction must have at least 2 postings.");
+
+            int postingCount;
             while (true) {
-                System.out.print("Posting: ");
-                String posting = scanner.nextLine().trim();
-                if (posting.isEmpty()) {
-                    break;
+                System.out.print("How many postings do you want to enter? ");
+                String input = scanner.nextLine().trim();
+
+                try {
+                    postingCount = Integer.parseInt(input);
+                    if (postingCount >= 2) {
+                        break;
+                    }
+                } catch (NumberFormatException e) {
+                    // fall through
                 }
+
+                System.out.println("Please enter a valid integer of at least 2.");
+            }
+
+            for (int i = 1; i <= postingCount; i++) {
+                String posting = askRequiredValue(scanner, "Enter posting " + i);
                 args.append(" -p \"").append(posting).append("\"");
             }
         }

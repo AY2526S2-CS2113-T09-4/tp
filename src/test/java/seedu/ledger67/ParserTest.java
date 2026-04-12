@@ -303,9 +303,9 @@ public class ParserTest {
                 "20/03/2026\n" +
                 "SGD\n" +
                 "Dinner\n" +
+                "2\n" +
                 "Expenses:Food 25.50\n" +
                 "Assets:Cash -25.50\n" +
-                "\n" +
                 "exit";
 
         runParserWithInput(input);
@@ -313,6 +313,7 @@ public class ParserTest {
         String output = outputStreamCaptor.toString();
         assertTrue(output.contains("Enter date (DD/MM/YYYY)"));
         assertTrue(output.contains("Enter currency"));
+        assertTrue(output.contains("How many postings do you want to enter?"));
         assertTrue(output.contains("Transaction added successfully"));
 
         // Verify the transaction exists in the list
