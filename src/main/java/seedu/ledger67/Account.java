@@ -2,6 +2,7 @@ package seedu.ledger67;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Account {
     private static final List<String> VALID_ROOTS =
@@ -15,8 +16,16 @@ public class Account {
             throw new IllegalArgumentException("Account name cannot be empty.");
         }
 
-        this.fullName = fullName.trim();
-        this.hierarchy = Arrays.asList(this.fullName.split(":"));
+        List<String> normalizedHierarchy = Arrays.stream(fullName.trim().split(":"))
+                .map(String::trim)
+                .collect(Collectors.toList());
+
+        if (normalizedHierarchy.stream().anyMatch(String::isEmpty)) {
+            throw new IllegalArgumentException("Account hierarchy cannot contain empty components.");
+        }
+
+        this.hierarchy = normalizedHierarchy;
+        this.fullName = String.join(":", normalizedHierarchy);
 
         // force validation early
         getRoot();
@@ -31,7 +40,7 @@ public class Account {
     }
 
     public String getRoot() {
-        String root = hierarchy.get(0).trim().toLowerCase();
+        String root = hierarchy.get(0).toLowerCase();
         if (!VALID_ROOTS.contains(root)) {
             throw new IllegalArgumentException(
                     "Invalid account root: " + hierarchy.get(0)
@@ -41,9 +50,22 @@ public class Account {
     }
 
     public boolean isUnder(String parentAccount) {
-        String normalizedParent = parentAccount.trim();
-        return fullName.equalsIgnoreCase(normalizedParent)
-                || fullName.toLowerCase().startsWith(normalizedParent.toLowerCase() + ":");
+        if (parentAccount == null || parentAccount.isBlank()) {
+            return false;
+        }
+
+        String normalizedParent = normalizeAccountName(parentAccount);
+        String lowerFullName = fullName.toLowerCase();
+        String lowerParent = normalizedParent.toLowerCase();
+
+        return lowerFullName.equals(lowerParent)
+                || lowerFullName.startsWith(lowerParent + ":");
+    }
+
+    private static String normalizeAccountName(String accountName) {
+        return Arrays.stream(accountName.trim().split(":"))
+                .map(String::trim)
+                .collect(Collectors.joining(":"));
     }
 
     @Override
