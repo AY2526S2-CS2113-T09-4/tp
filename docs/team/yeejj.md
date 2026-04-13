@@ -2,313 +2,145 @@
 
 ## Overview
 
-**Ledger67** is a command-line double-entry accounting system that helps users record and manage financial transactions while preserving proper accounting structure. It supports hierarchical accounts, multi-currency conversion, confirmation workflows, and balance sheet generation for financial analysis.
+**Ledger67** is a command-line double-entry accounting system that helps users record and manage financial transactions while preserving proper accounting structure. It supports hierarchical accounts, multi-currency conversion, confirmation workflows, and balance sheet generation.
 
-Beyond basic transaction tracking, Ledger67 supports hierarchical accounts, multi-currency conversion, confirmation workflows, and real-time balance sheet generation for financial analysis.
-My main contributions focused on the system’s core accounting and infrastructure features, particularly the **balance sheet**, **currency conversion and confirmation workflow**, **hierarchical account support**, **storage**, and the corresponding **documentation and testing updates** required to keep the product consistent after post-PE review fixes.
-As a 2 person (third person not responsive) team, we were able to work well together to complete the product to the best of our ability after sleepless nights and countless checks.
+My contributions focused on **core system features (balance sheet, currency conversion, confirmation workflow, storage, hierarchical accounts)** as well as **post-PE review fixes, testing, and documentation improvements (UG + DG + diagrams)** to ensure the product is correct, consistent, and maintainable.
 
 ---
 
 ## Summary of Contributions
-
-### Code Contributed
-[View my code contributions](<https://nus-cs2113-ay2526-s2.github.io/tp-dashboard/?search=yeejj&breakdown=true&sort=groupTitle%20dsc&sortWithin=title&since=2026-02-20T00%3A00%3A00&timeframe=commit&mergegroup=&groupSelect=groupByRepos&checkedFileTypes=docs~functional-code~test-code~other&filteredFileName=>)
+[View my code contributions](https://nus-cs2113-ay2526-s2.github.io/tp-dashboard/?search=yeejj&breakdown=true)
 
 ---
 
 ### Enhancements Implemented
 
 #### 1. Balance Sheet Feature (Major Feature)
+- Implemented `balance`, `balance -acc`, `balance -to`
+- Designed `BalanceSheet` class (aggregation, formatting, CSV export)
 
-I implemented the **balance sheet generation feature**, which allows users to view a structured summary of their financial position directly from the CLI.
-
-**What I added**
-- Implemented `balance`
-- Added filtering support with `balance -acc`
-- Added converted reporting with `balance -to`
-- Added combined usage with `balance -acc ACCOUNT -to CURRENCY`
-- Designed and implemented a dedicated `BalanceSheet` class for:
-    - balance sheet formatting
-    - equation checking
-    - CSV export to `data/balance-sheet.csv`
-
-**Why this was substantial**
-- It required aggregation across all transactions and postings instead of simple line-by-line printing
-- It required correctly folding **Income** and **Expenses** into **Equity**
-- It needed to work with **hierarchical accounts**
-- It had to support both **original-currency** and **converted-currency** views
-- It required output both in CLI format and in CSV export format
-
-**Files involved**
-- `BalanceSheet`
-- `TransactionsList`
-- `Parser`
-- `Account`
+**Key challenges**
+- Aggregating across all transactions/postings
+- Correctly incorporating **Income/Expenses → Equity**
+- Supporting hierarchical filtering and currency conversion
 
 ---
 
 #### 2. Currency Conversion System (Major Feature)
-
-I implemented the project’s **currency conversion subsystem**, which supports both standalone conversion and view-mode conversion of stored transactions.
-
-**What I added**
-- `CurrencyConverter`
-- `ExchangeRateData`
-- `ExchangeRateStorage`
-- `LiveExchangeRateService`
-- Support for:
-    - `convert`
-    - `convert transaction`
-    - `list -to`
-    - `rates refresh`
+- Implemented full subsystem:
+    - `CurrencyConverter`, `ExchangeRateData`, `ExchangeRateStorage`, `LiveExchangeRateService`
+- Supported:
+    - `convert`, `convert transaction`, `list -to`, `rates refresh`
 
 **Design decisions**
-- Conversion is **non-destructive by default**
-- Exchange rates can be loaded from local storage
-- Live rates can be refreshed from an API
-- Stored transaction values remain unchanged unless explicitly confirmed
-
-**Why this was substantial**
-- It introduced an additional subsystem that interacts with both the parser and transaction rendering flow
-- It required data persistence for exchange rates
-- It required handling both offline and refreshed exchange rate usage
-- It had to integrate cleanly with later features such as `confirm` and `balance -to`
+- Non-destructive conversion by default
+- Supports both stored and live exchange rates
 
 ---
 
 #### 3. Confirm Conversion Workflow (Multi-step Feature)
+- Implemented `confirm`, `confirm all`, `confirm ID`
+- Designed **stateful parser workflow**
 
-I designed and implemented the **stateful confirmation workflow** for converted transactions.
-
-**What I added**
-- `confirm`
-- `confirm all`
-- `confirm ID`
-
-**How it works**
-- After `convert transaction`, users may `confirm`
-- After `list -to`, users may `confirm all` or `confirm ID`
-- The parser temporarily stores:
-    - pending transaction ID
-    - pending target currency
-    - whether the workflow came from converted list view
-    - displayed transaction IDs for validation
-
-**Why this was substantial**
-- It required **stateful parser logic**, rather than one-shot command parsing
-- It had to safely distinguish between **view-only** and **persisted** operations
-- It reused existing editing logic to avoid duplicating persistence code
-- It needed careful validation so that invalid confirmation commands do not silently mutate data
+**Key challenges**
+- Managing parser state across commands
+- Distinguishing view-only vs persisted data
+- Integrating with existing edit/storage logic
 
 ---
 
-#### 4. Hierarchical Account System (Core Feature)
-
-I implemented the **hierarchical account model** and filtering support that allows the system to work with account trees such as `Assets:Bank:DBS`.
-
-**What I added**
-- Implemented the `Account` class
-- Added validation of account roots
-- Added support for hierarchical matching through `isUnder()`
-- Integrated account hierarchy into:
-    - `list -acc`
-    - `balance -acc`
-
-**Why this mattered**
-- It allowed Ledger67 to support structured accounting categories rather than flat strings
-- It made both reporting and filtering much more useful
-- It was foundational for later features such as balance sheet grouping
+#### 4. Core System Features
+- **Hierarchical Accounts**
+    - Implemented `Account` class (`Assets:Bank:DBS`)
+    - Added filtering (`list -acc`, `balance -acc`)
+- **Storage System**
+    - Implemented persistent storage (`Storage`)
+    - Supports save/load, encoding, and error handling
+- **Parser Enhancements**
+    - Integrated all major features into command system
+    - Added flag parsing and multi-step workflows
 
 ---
 
-#### 5. Storage System (Core Feature)
+#### 5. Post-PE Review Fixes (Major Contribution)
 
-I implemented the project’s **transaction persistence layer**.
+Closed **30+ bugs** across features and documentation.
 
-**What I added**
-- `Storage`
-- Save/load support for transactions
-- Immediate persistence after modifying operations
-- Robust parsing for storage recovery
-- Escaping/unescaping support for special characters in stored text
+**Examples**
+- Fixed confirm workflow correctness
+- Fixed edit command validation (min postings)
+- Handled corrupted storage cases
+- Fixed ID increment and case-sensitivity issues
+- Resolved duplicate flags, whitespace, zero-amount issues
+- Clarified decimal rounding behavior
 
-**Why this was substantial**
-- It turned the system from a session-only CLI into a usable persistent application
-- It had to serialize and restore **multi-posting transactions**
-- It needed to tolerate malformed storage lines without crashing the application
-
----
-
-#### 6. Parser Enhancements and Feature Integration
-
-Many of the features above required extending the `Parser` substantially.
-
-**What I contributed**
-- Added support for:
-    - `balance`
-    - `convert transaction`
-    - `confirm`
-    - `confirm all`
-    - `confirm ID`
-    - `rates refresh`
-- Extended parser handling for:
-    - `-acc`
-    - `-to`
-    - multi-step workflows
-- Helped integrate feature-specific flows into a single consistent command system
-
-**Why this mattered**
-- The parser became the integration point for several major features
-- These additions required both command dispatch logic and validation paths
-- The confirmation feature in particular required careful coordination with transaction rendering and editing
+**Documentation & structure fixes**
+- Added **Table of Contents (UG & DG)**
+- Reordered sections for clarity
+- Fixed command format inconsistencies
+- Standardised accounting equation across UG
+- Added **DG Appendix: Manual Testing**
+- Simplified and corrected UML diagrams
+- Added class diagrams where appropriate
 
 ---
 
-#### 7. Post-PE-D Review Bug Fixes and Refinements
-
-After the PE-D reviews, I handled a large set of **feature-related fixes and documentation consistency fixes**, especially in the areas I implemented.
-Closed a total of 30 bugs after the PE-D to ensure all bugs are resolved. 
-
-**Examples of fixes I contributed**
-- Fixing Edit command to ensure minimum of 2 postings
-- Handled Corrupted Storage File
-- Rates Refresh warning
-- ID increment error fixed
-- Case Sensitivity Fix for root accounts 
-- Duplicate flags fix
-- Whitespace trimming bug
-- Zero-amount transaction error
-- fixed confirm transaction feature
-- Decimal Rounding Documentation
-- Updated the UG and DG structure, including:
-    - adding a **Table of Contents** to both
-    - reordering sections for easier navigation
-- Fixed and clarified **User Guide / Developer Guide consistency**
-- Added the missing **Developer Guide Appendix E: Instructions for Manual Testing**
-- Fixed and simplified several UML diagrams
-- Added new class diagrams where structural explanation was more suitable than sequence diagrams
-- Resolved documentation bugs and feature-related bugs raised during review, especially around:
-    - currency conversion workflows
-    - confirmation workflow
-    - balance sheet documentation
-    - command format consistency
-    - accounting equation consistency
-    - storage and diagram explanations
-
-This work was important because it improved not just correctness, but also the usability and maintainability of the final product.
-
----
-
-#### 8. Testing
-- I added and updated tests for the features I implemented and for later fixes that affected earlier behaviour.
-- Created **JUnit tests for all implemented features**
-
-**What I did**
-- Added JUnit tests for major features and related logic to improve test coverage
-- Updated existing tests after implementation changes and bug fixes
-- Helped maintain compatibility after parser and account-related changes
-- Contributed to improving test reliability after the later case-sensitivity and behavior fixes
-
-**Examples of relevant test areas**
-- parser workflows
-- transactions list behaviour
-- storage persistence
-- exchange-rate storage and conversion
-- balance sheet behaviour
-- confirmation workflow
+#### 6. Testing
+- Added and updated JUnit tests for:
+    - parser workflows
+    - transactions and storage
+    - currency conversion
+    - balance sheet logic
+    - confirm workflow
+- Ensured compatibility after feature changes and bug fixes
 
 ---
 
 ### Contributions to the User Guide
-
-I contributed to the documentation for the features I implemented and later helped fix documentation issues found during review.
-
-**Sections and improvements contributed**
-- Balance sheet feature documentation
-- Currency conversion workflow documentation
-- Confirm workflow documentation
-- Hierarchical account filtering documentation
-- Command summary consistency updates
-- Table of Contents and document reordering for readability
-- Post-review fixes to ensure the UG matched the final implementation
-
-I also fixed several documentation bugs after the PE-D reviews, including feature-related inconsistencies and command-format mismatches.
+- Documented:
+    - Balance sheet feature
+    - Currency conversion workflow
+    - Confirm workflow
+    - Hierarchical filtering
+- Fixed inconsistencies after PE review
+- Added Table of Contents and improved structure
 
 ---
 
 ### Contributions to the Developer Guide
-
-I wrote and updated DG sections related to the features I implemented, and later improved the DG structure after reviewer feedback.
-
-**Sections contributed**
-- Storage Feature
-- Currency Conversion Feature
-- Confirm Conversion Workflow
-- Balance Sheet Feature
-- Hierarchical account-related explanations
-
-**Documentation improvements contributed**
-- Added the required **Appendix E: Instructions for Manual Testing**
-- Added and revised UML diagrams
-- Updated sequence diagrams to follow expected conventions more closely
-- Added new **class diagrams** where they explained component/package structure better than sequence diagrams
-- Added Table of Contents and improved section ordering
-- Fixed post-review issues in DG content and diagram structure
-
-**Diagrams contributed or updated**
-- Storage-related diagrams
-- Currency conversion diagrams
-- Confirm workflow diagrams
-- Balance sheet-related diagram/documentation updates
-- New class diagrams for clearer structural explanation
-- Simplified all sequence diagrams such that are visible
+- Wrote sections for:
+    - Storage
+    - Currency conversion
+    - Confirm workflow
+    - Balance sheet
+- Added:
+    - **Appendix: Manual Testing**
+    - Class diagrams and improved sequence diagrams
+    - Table of Contents and better sectioning
+- Fixed diagram and formatting issues after review
 
 ---
 
 ### Contributions to Team-Based Tasks
-
-I contributed to team coordination and project maintenance by:
-- creating and managing issues
-- helping maintain milestones aligned with project deadlines
-- discussing implementation sequencing for features
-- coordinating integration of documentation and diagrams with ongoing code changes
-- Working closely with Pran to ensure we do not fall behind schedule as the other teammate remained unresponsive, this was the biggest struggle of the project.
-- Completed the AboutUs.md page and launched the product website.
-- Released the final versions v1.0, v2.0 and v2.1 with the appropriate UG and DG, for the team to ensure everything is complete 
-
-I also worked with teammates during integration so that the implemented features and documentation stayed aligned across releases.
+- Managed issues and milestones
+- Coordinated feature integration and documentation
+- Worked in a reduced team (2 active members) to deliver full product
+- Handled releases (v1.0, v2.0, v2.1) and website setup
 
 ---
 
 ### Review / Mentoring Contributions
-
-I reviewed feature-related bugs and discussed fixes with teammates, especially where the implemented features interacted with each other.
-
-My contributions included:
-- discussing and debugging integration issues
-- checking consistency between code, UG, and DG
-- helping identify where documentation no longer matched implementation
-- helping refine feature flows and design decisions through discussion
-- Especially for the UML diagrams, helped teammates to ensure proper implementation.
+- Reviewed bugs and feature interactions
+- Helped debug integration issues
+- Ensured consistency between code, UG, and DG
+- Guided UML diagram improvements
 
 ---
 
 ### Contributions Beyond the Project Team
-
-Beyond direct coding, I helped keep the project coherent by:
-- improving documentation quality and consistency across UG and DG
-- helping drive discussion around feature design and integration
-- ensuring post-review fixes were reflected not only in code but also in diagrams and developer-facing documentation
-- contributing to the team’s technical direction in areas such as:
-    - system integration
-    - documentation structure
-    - diagram usage and cleanup
-  
-In terms of helping others:
-- Contributed to a total of 14 bugs in the PE-D, putting in a deep genuine effort to help other's projects.
-
----
+- Reported **14 bugs** during PE-D for other teams
+- Improved internal documentation quality and system consistency
+- Contributed to design discussions and integration decisions
 
 ## Contributions to the Developer Guide (Extracts) - Non-exhaustive
 
