@@ -5,11 +5,11 @@
 - [Developer Guide - Ledger 67](#developer-guide---ledger-67)
   - [Table of Contents](#table-of-contents)
   - [1. Acknowledgements](#1-acknowledgements)
-  - [2. Design \& Implementation](#2-design--implementation)
+  - [2. Design and Implementation](#2-design--implementation)
     - [2.1 Architecture Overview](#21-architecture-overview)
     - [2.2 Design Considerations](#22-design-considerations)
     - [2.3 Component-Level Design](#23-component-level-design)
-      - [2.3.1 Parser \& UI Component](#231-parser--ui-component)
+      - [2.3.1 Parser and UI Component](#231-parser--ui-component)
       - [2.3.2 Transaction Management Component](#232-transaction-management-component)
       - [2.3.3 Currency Engine](#233-currency-engine)
       - [2.3.4 Class diagram Component-Level Design](#234-class-diagram-component-level-design)
@@ -20,7 +20,7 @@
       - [3.1.1 Create (Add) Flow](#311-create-add-flow)
       - [3.1.2 Read (List/Filter) Flow](#312-read-listfilter-flow)
       - [3.1.3 Update (Edit) Flow](#313-update-edit-flow)
-      - [3.1.4 Delete Flow (Single \& Bulk)](#314-delete-flow-single--bulk)
+      - [3.1.4 Delete Flow (Single & Bulk)](#314-delete-flow-single--bulk)
     - [3.2 Updated Transaction Data Model](#32-updated-transaction-data-model)
       - [3.2.1 Design Considerations](#321-design-considerations)
       - [3.2.2 Alternatives Considered](#322-alternatives-considered)
@@ -66,12 +66,12 @@
         - [3.7.10 File Characteristics:](#3710-file-characteristics)
       - [3.7.11 Design Considerations](#3711-design-considerations)
       - [3.7.12 Limitations](#3712-limitations)
-    - [3.8 Advanced Filtering \& Bulk Operations](#38-advanced-filtering--bulk-operations)
+    - [3.8 Advanced Filtering & Bulk Operations](#38-advanced-filtering--bulk-operations)
       - [3.8.1 Implementation Details:](#381-implementation-details)
       - [3.8.2 Bulk Deletion Safety:](#382-bulk-deletion-safety)
       - [3.8.3 Design Considerations](#383-design-considerations)
       - [3.8.4 Alternatives Considered](#384-alternatives-considered)
-    - [3.9 Hierarchical Account Registry \& Filtering Feature](#39-hierarchical-account-registry--filtering-feature)
+    - [3.9 Hierarchical Account Registry & Filtering Feature](#39-hierarchical-account-registry--filtering-feature)
       - [3.9.1 Motivation](#391-motivation)
       - [3.9.2 Implementation](#392-implementation)
       - [3.9.3 Core Logic](#393-core-logic)
@@ -1187,16 +1187,15 @@ It complements the User Guide by outlining important test flows and edge cases.
 **Steps:**
 1. Navigate to the project directory
 2. Run:
-```
 
+```
 java -jar tp.jar
-
 ```
+
 or
+
 ```
-
 ./gradlew run
-
 ```
 
 ---
@@ -1204,10 +1203,9 @@ or
 ### 8.2 Adding Transactions
 
 **Test basic add:**
+
 ```
-
 add -date 01/01/2026 -desc "Lunch" -p "Assets:Cash -10" -p "Expenses:Food 10" -c SGD
-
 ```
 
 **Expected:**
@@ -1219,10 +1217,9 @@ add -date 01/01/2026 -desc "Lunch" -p "Assets:Cash -10" -p "Expenses:Food 10" -c
 ### 8.3 Validation of Minimum Postings
 
 **Test invalid case:**
+
 ```
-
 add -date 01/01/2026 -desc "Invalid" -p "Assets:Cash 10" -c SGD
-
 ```
 
 **Expected:**
@@ -1234,12 +1231,10 @@ add -date 01/01/2026 -desc "Invalid" -p "Assets:Cash 10" -c SGD
 ### 8.4 Listing and Filtering
 
 ```
-
 list
 list -acc Expenses
 list -match Lunch
 list -begin 01/01/2026 -end 31/12/2026
-
 ```
 
 **Expected:**
@@ -1251,17 +1246,15 @@ list -begin 01/01/2026 -end 31/12/2026
 ### 8.5 Editing Transactions
 
 **Valid edit:**
+
 ```
-
 edit 1 -desc "Updated Lunch"
-
 ```
 
 **Invalid edit (1 posting):**
+
 ```
-
 edit 1 -p "Assets:Cash -20"
-
 ```
 
 **Expected:**
@@ -1274,10 +1267,8 @@ edit 1 -p "Assets:Cash -20"
 ### 8.6 Deleting Transactions
 
 ```
-
 delete 1
 delete -match Lunch
-
 ```
 
 **Expected:**
@@ -1289,10 +1280,8 @@ delete -match Lunch
 ### 8.7 Currency Conversion
 
 ```
-
 convert -a 100 -from USD -to SGD
 convert transaction 1 -to SGD
-
 ```
 
 **Expected:**
@@ -1304,10 +1293,8 @@ convert transaction 1 -to SGD
 ### 8.8 Confirm Feature
 
 ```
-
 convert transaction 1 -to SGD
 confirm
-
 ```
 
 **Expected:**
@@ -1319,9 +1306,7 @@ confirm
 ### 8.9 List Conversion (View Only)
 
 ```
-
 list -to USD
-
 ```
 
 **Expected:**
@@ -1333,11 +1318,9 @@ list -to USD
 ### 8.10 Balance Sheet
 
 ```
-
 balance
 balance -acc Assets
 balance -to USD
-
 ```
 
 **Expected:**
@@ -1350,9 +1333,7 @@ balance -to USD
 ### 8.11 Monetary Precision (Rounding)
 
 ```
-
 add -date 01/01/2026 -desc "Precision Test" -p "Assets:Cash 100.999999" -p "Expenses:Food -100.999999" -c SGD
-
 ```
 
 **Expected:**
@@ -1364,10 +1345,8 @@ add -date 01/01/2026 -desc "Precision Test" -p "Assets:Cash 100.999999" -p "Expe
 ### 8.12 UI Assist Mode
 
 ```
-
 uiassist -on
 add
-
 ```
 
 **Expected:**
