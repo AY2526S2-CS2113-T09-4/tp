@@ -67,6 +67,7 @@ Ledger67 uses a **signed amount model** instead of debit/credit.
 * `-` indicates a **decrease**
 
 #### Recommended Usage
+
 | Account Type                | Increase | Decrease |
 | --------------------------- | -------- | -------- |
 | Assets, Expenses            | `+`      | `-`      |
