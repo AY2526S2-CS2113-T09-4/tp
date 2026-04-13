@@ -360,12 +360,12 @@ public class TransactionValidator {
         report.append(result.toString());
         
         if (result.isValid()) {
-            report.append("\n✅ Transaction is valid");
+            report.append("Transaction is valid");
             if (result.hasWarnings()) {
                 report.append(" with warnings");
             }
         } else {
-            report.append("\n❌ Transaction has validation errors");
+            report.append("Transaction has validation errors");
         }
         
         return report.toString();

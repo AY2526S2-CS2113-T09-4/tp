@@ -325,6 +325,10 @@ public class Parser {
     }
 
     public static List<Posting> convertStringList2PostingList(List<String> postingStrings) {
+        if (postingStrings == null || postingStrings.size() < 2) {
+            throw new IllegalArgumentException("At least 2 postings (-p) are required.");
+        }
+
         List<Posting> converted = new ArrayList<>();
         for (String pStr : postingStrings) {
             String cleanedStr = pStr.replace("\"", "").replace("'", "").trim();
@@ -334,11 +338,9 @@ public class Parser {
                 throw new IllegalArgumentException("Invalid posting format. Use: -p \"Account Amount\"");
             }
             try {
-                // The amount is always the last part
                 int lastIndex = parts.length - 1;
                 double amount = Double.parseDouble(parts[lastIndex].trim());
 
-                // Everything before the amount is the account name
                 String accountName = cleanedStr.substring(0, cleanedStr.lastIndexOf(parts[lastIndex])).trim();
 
                 converted.add(new Posting(accountName, amount));
@@ -348,7 +350,6 @@ public class Parser {
         }
         return converted;
     }
-
 
 
     private void handleAdd(String args) {
@@ -525,8 +526,13 @@ public class Parser {
         if (postingStrings == null) {
             postings = null;
         } else {
+            if (postingStrings.size() < 2) {
+                throw new IllegalArgumentException(
+                        "At least 2 postings (-p) are required when replacing postings in edit.");
+            }
             postings = convertStringList2PostingList(postingStrings);
         }
+
         list.editTransaction(id, date, desc, postings, currency);
         System.out.println("Transaction edited successfully.");
     }
