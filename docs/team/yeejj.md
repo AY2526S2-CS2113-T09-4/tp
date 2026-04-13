@@ -3,8 +3,7 @@
 ## Overview
 
 **Ledger67** is a command-line double-entry accounting system that helps users record and manage financial transactions while preserving proper accounting structure. It supports hierarchical accounts, multi-currency conversion, confirmation workflows, and balance sheet generation.
-
-My contributions focused on **core system features (balance sheet, currency conversion, confirmation workflow, storage, hierarchical accounts)** as well as **post-PE review fixes, testing, and documentation improvements (UG + DG + diagrams)** to ensure the product is correct, consistent, and maintainable.
+My contributions focused on the system’s core accounting and infrastructure features, particularly the balance sheet, currency conversion and confirmation workflow, hierarchical account support, and storage system. In addition, I contributed extensively to post-PE review fixes, testing, and documentation improvements (UG and DG), ensuring the final product is consistent, robust, and maintainable.
 
 ---
 
@@ -15,132 +14,43 @@ My contributions focused on **core system features (balance sheet, currency conv
 
 ### Enhancements Implemented
 
-#### 1. Balance Sheet Feature (Major Feature)
-- Implemented `balance`, `balance -acc`, `balance -to`
-- Designed `BalanceSheet` class (aggregation, formatting, CSV export)
+I implemented several key features that form the core functionality of Ledger67. The most significant was the balance sheet feature, which allows users to generate a structured summary of their financial position directly from the CLI. This required aggregating values across all transactions and postings, correctly incorporating income and expenses into equity, and supporting hierarchical account filtering as well as optional currency conversion. I designed and implemented a dedicated `BalanceSheet` class to handle computation, formatting, and CSV export, and integrated it with the parser, transactions list, and account system.
 
-**Key challenges**
-- Aggregating across all transactions/postings
-- Correctly incorporating **Income/Expenses → Equity**
-- Supporting hierarchical filtering and currency conversion
+I also implemented the currency conversion subsystem, which includes components such as `CurrencyConverter`, `ExchangeRateData`, `ExchangeRateStorage`, and `LiveExchangeRateService`. This subsystem supports direct conversion, transaction-level conversion, and view-based conversion through commands such as `convert`, `convert transaction`, and `list -to`, as well as exchange rate refreshing. A key design decision was to make conversion non-destructive by default, allowing users to preview converted values without modifying stored data unless explicitly confirmed.
 
----
+Building on this, I designed and implemented the confirm conversion workflow, introducing commands such as `confirm`, `confirm all`, and `confirm ID`. This feature required a stateful parser design that could track pending conversions across multiple commands while ensuring safe transitions between view-only and persisted operations. The implementation reused existing editing logic to avoid duplication and required careful validation to prevent unintended data modification.
 
-#### 2. Currency Conversion System (Major Feature)
-- Implemented full subsystem:
-    - `CurrencyConverter`, `ExchangeRateData`, `ExchangeRateStorage`, `LiveExchangeRateService`
-- Supported:
-    - `convert`, `convert transaction`, `list -to`, `rates refresh`
-
-**Design decisions**
-- Non-destructive conversion by default
-- Supports both stored and live exchange rates
+In addition to these major features, I implemented the hierarchical account system through the `Account` class, enabling structured account names such as `Assets:Bank:DBS` and supporting hierarchical filtering across features like listing and balance sheet generation. I also implemented the storage system, which provides persistent save and load functionality, handles encoding and decoding of special characters, and ensures robustness against malformed storage data. These features were integrated through enhancements to the parser, which was extended to support new commands, flags, and multi-step workflows.
 
 ---
 
-#### 3. Confirm Conversion Workflow (Multi-step Feature)
-- Implemented `confirm`, `confirm all`, `confirm ID`
-- Designed **stateful parser workflow**
+### Post-PE Review Fixes and Testing
 
-**Key challenges**
-- Managing parser state across commands
-- Distinguishing view-only vs persisted data
-- Integrating with existing edit/storage logic
+After the PE-D reviews, I addressed over 30 bugs across both features and documentation. These included fixing validation issues in the edit command, resolving inconsistencies in the confirm workflow, handling corrupted storage files, correcting ID increment behaviour, addressing case-sensitivity issues in account roots, and fixing edge cases such as duplicate flags, whitespace handling, and zero-amount transactions. I also clarified system behaviour such as decimal rounding to ensure consistency between implementation and documentation.
 
----
+In parallel, I made substantial improvements to the project documentation. I added tables of contents to both the User Guide and Developer Guide, reorganised sections for clarity, and resolved inconsistencies in command formats and accounting equations. I also added the required Developer Guide appendix on manual testing, simplified and corrected UML diagrams, and introduced class diagrams where they provided clearer structural explanations than sequence diagrams.
 
-#### 4. Core System Features
-- **Hierarchical Accounts**
-    - Implemented `Account` class (`Assets:Bank:DBS`)
-    - Added filtering (`list -acc`, `balance -acc`)
-- **Storage System**
-    - Implemented persistent storage (`Storage`)
-    - Supports save/load, encoding, and error handling
-- **Parser Enhancements**
-    - Integrated all major features into command system
-    - Added flag parsing and multi-step workflows
+I further supported these changes by adding and updating JUnit tests for key components such as parser workflows, transactions handling, storage persistence, currency conversion, balance sheet logic, and the confirm workflow. These updates ensured that the system remained stable and consistent after multiple rounds of feature additions and bug fixes.
 
 ---
 
-#### 5. Post-PE Review Fixes (Major Contribution)
+### Contributions to the User Guide and Developer Guide
 
-Closed **30+ bugs** across features and documentation.
-
-**Examples**
-- Fixed confirm workflow correctness
-- Fixed edit command validation (min postings)
-- Handled corrupted storage cases
-- Fixed ID increment and case-sensitivity issues
-- Resolved duplicate flags, whitespace, zero-amount issues
-- Clarified decimal rounding behavior
-
-**Documentation & structure fixes**
-- Added **Table of Contents (UG & DG)**
-- Reordered sections for clarity
-- Fixed command format inconsistencies
-- Standardised accounting equation across UG
-- Added **DG Appendix: Manual Testing**
-- Simplified and corrected UML diagrams
-- Added class diagrams where appropriate
+I contributed to both the User Guide and Developer Guide by documenting the features I implemented and ensuring consistency after subsequent fixes. In the User Guide, I added documentation for the balance sheet, currency conversion workflows, confirm workflow, and hierarchical filtering, while also improving overall structure and clarity. In the Developer Guide, I authored sections for storage, currency conversion, confirm workflow, and balance sheet features, and enhanced the documentation by adding a manual testing appendix, refining UML diagrams, and improving section organisation and readability.
 
 ---
 
-#### 6. Testing
-- Added and updated JUnit tests for:
-    - parser workflows
-    - transactions and storage
-    - currency conversion
-    - balance sheet logic
-    - confirm workflow
-- Ensured compatibility after feature changes and bug fixes
+### Contributions to Team-Based Tasks and Beyond
+
+I contributed to team coordination by managing issues and milestones, assisting with feature integration, and ensuring alignment between code and documentation. Due to limited team availability, I worked closely with one teammate to complete the product and deliver final releases, including versioned updates and the project website.
+
+In addition, I reviewed feature implementations, helped debug integration issues, and ensured consistency across components, particularly in areas where multiple features interacted. I also contributed beyond the team by reporting 14 bugs during the PE-D exercise for other teams, demonstrating a strong understanding of both functional correctness and documentation quality.
 
 ---
 
-### Contributions to the User Guide
-- Documented:
-    - Balance sheet feature
-    - Currency conversion workflow
-    - Confirm workflow
-    - Hierarchical filtering
-- Fixed inconsistencies after PE review
-- Added Table of Contents and improved structure
+## Optional: Contributions to the Developer Guide (Extracts)
 
----
-
-### Contributions to the Developer Guide
-- Wrote sections for:
-    - Storage
-    - Currency conversion
-    - Confirm workflow
-    - Balance sheet
-- Added:
-    - **Appendix: Manual Testing**
-    - Class diagrams and improved sequence diagrams
-    - Table of Contents and better sectioning
-- Fixed diagram and formatting issues after review
-
----
-
-### Contributions to Team-Based Tasks
-- Managed issues and milestones
-- Coordinated feature integration and documentation
-- Worked in a reduced team (2 active members) to deliver full product
-- Handled releases (v1.0, v2.0, v2.1) and website setup
-
----
-
-### Review / Mentoring Contributions
-- Reviewed bugs and feature interactions
-- Helped debug integration issues
-- Ensured consistency between code, UG, and DG
-- Guided UML diagram improvements
-
----
-
-### Contributions Beyond the Project Team
-- Reported **14 bugs** during PE-D for other teams
-- Improved internal documentation quality and system consistency
-- Contributed to design discussions and integration decisions
+One key improvement I contributed was the addition of the required manual testing appendix in the Developer Guide, which ensures the product can be systematically verified by future developers and evaluators. I also improved diagram quality by simplifying overly complex sequence diagrams and introducing class diagrams to better represent structural relationships. Finally, I documented the design considerations behind major features such as balance sheet generation and currency conversion, including decisions around non-destructive workflows and system integration.
 
 ## Contributions to the Developer Guide (Extracts) - Non-exhaustive
 
