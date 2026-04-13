@@ -1,11 +1,12 @@
 # Project Portfolio Page – JJ
----
 
 ## Overview
 
-**Ledger67** is a command-line double-entry accounting system designed to help users manage financial transactions with proper accounting principles such as Assets = Liabilities + Equity.
+**Ledger67** is a command-line double-entry accounting system that helps users record and manage financial transactions while preserving proper accounting structure. It supports hierarchical accounts, multi-currency conversion, confirmation workflows, and balance sheet generation for financial analysis.
 
 Beyond basic transaction tracking, Ledger67 supports hierarchical accounts, multi-currency conversion, confirmation workflows, and real-time balance sheet generation for financial analysis.
+My main contributions focused on the system’s core accounting and infrastructure features, particularly the **balance sheet**, **currency conversion and confirmation workflow**, **hierarchical account support**, **storage**, and the corresponding **documentation and testing updates** required to keep the product consistent after post-PE review fixes.
+As a 2 person (third person not responsive) team, we were able to work well together to complete the product to the best of our ability after sleepless nights and countless checks.
 
 ---
 
@@ -18,188 +19,350 @@ Beyond basic transaction tracking, Ledger67 supports hierarchical accounts, mult
 
 ### Enhancements Implemented
 
-I implemented several core features that significantly extend the system’s capabilities:
+#### 1. Balance Sheet Feature (Major Feature)
 
-#### 1. Balance Sheet Generation (Major Feature)
-- Implemented full balance sheet computation based on:
-    - Assets, Liabilities, Equity
-    - Dynamic incorporation of Income and Expenses into Equity
-- Added support for:
-    - Hierarchical filtering (`balance -acc`)
-    - Currency conversion (`balance -to`)
-    - Combined filtering and conversion
-- Designed and implemented a new `BalanceSheet` class for:
-    - Output formatting
-    - CSV export (`data/balance-sheet.csv`)
-- Integrated feature across `Parser`, `TransactionsList`, and `Account`
+I implemented the **balance sheet generation feature**, which allows users to view a structured summary of their financial position directly from the CLI.
 
-**Complexity:**
-- Required aggregation across all transactions and postings
-- Required correct accounting logic (Income → Equity)
-- Required integration with currency conversion system
-- Required handling of partial (filtered) views
-- Required conversion into .csv file
+**What I added**
+- Implemented `balance`
+- Added filtering support with `balance -acc`
+- Added converted reporting with `balance -to`
+- Added combined usage with `balance -acc ACCOUNT -to CURRENCY`
+- Designed and implemented a dedicated `BalanceSheet` class for:
+    - balance sheet formatting
+    - equation checking
+    - CSV export to `data/balance-sheet.csv`
+
+**Why this was substantial**
+- It required aggregation across all transactions and postings instead of simple line-by-line printing
+- It required correctly folding **Income** and **Expenses** into **Equity**
+- It needed to work with **hierarchical accounts**
+- It had to support both **original-currency** and **converted-currency** views
+- It required output both in CLI format and in CSV export format
+
+**Files involved**
+- `BalanceSheet`
+- `TransactionsList`
+- `Parser`
+- `Account`
 
 ---
 
 #### 2. Currency Conversion System (Major Feature)
-- Implemented full conversion pipeline:
-    - `CurrencyConverter`
-    - `ExchangeRateData`
-    - `ExchangeRateStorage`
-    - `LiveExchangeRateService`
-- Supported:
-    - Direct conversion (`convert`)
-    - Transaction-level conversion (`convert transaction`)
-    - List view conversion (`list -to`)
-- Designed conversion to be **non-destructive by default**
-- Designed to also cater to live rates through an API
+
+I implemented the project’s **currency conversion subsystem**, which supports both standalone conversion and view-mode conversion of stored transactions.
+
+**What I added**
+- `CurrencyConverter`
+- `ExchangeRateData`
+- `ExchangeRateStorage`
+- `LiveExchangeRateService`
+- Support for:
+    - `convert`
+    - `convert transaction`
+    - `list -to`
+    - `rates refresh`
+
+**Design decisions**
+- Conversion is **non-destructive by default**
+- Exchange rates can be loaded from local storage
+- Live rates can be refreshed from an API
+- Stored transaction values remain unchanged unless explicitly confirmed
+
+**Why this was substantial**
+- It introduced an additional subsystem that interacts with both the parser and transaction rendering flow
+- It required data persistence for exchange rates
+- It required handling both offline and refreshed exchange rate usage
+- It had to integrate cleanly with later features such as `confirm` and `balance -to`
 
 ---
 
 #### 3. Confirm Conversion Workflow (Multi-step Feature)
-- Designed and implemented a **stateful Parser workflow**
-- Added:
-    - `confirm`
-    - `confirm all`
-    - `confirm ID`
-- Implemented temporary state handling:
-    - pending transaction ID
-    - pending currency
-    - list-view mode tracking
-- Reused existing `editTransaction()` logic to persist updates
 
-**Complexity:**
-- Required multi-step command design
-- Required careful state management
-- Avoided modifying core data model unnecessarily
-- Integrated conversion into storage feature
+I designed and implemented the **stateful confirmation workflow** for converted transactions.
+
+**What I added**
+- `confirm`
+- `confirm all`
+- `confirm ID`
+
+**How it works**
+- After `convert transaction`, users may `confirm`
+- After `list -to`, users may `confirm all` or `confirm ID`
+- The parser temporarily stores:
+    - pending transaction ID
+    - pending target currency
+    - whether the workflow came from converted list view
+    - displayed transaction IDs for validation
+
+**Why this was substantial**
+- It required **stateful parser logic**, rather than one-shot command parsing
+- It had to safely distinguish between **view-only** and **persisted** operations
+- It reused existing editing logic to avoid duplicating persistence code
+- It needed careful validation so that invalid confirmation commands do not silently mutate data
 
 ---
 
 #### 4. Hierarchical Account System (Core Feature)
-- Implemented `Account` class:
-    - Parsing using `:` (e.g., `Assets:Bank:DBS`)
-    - Validation of account roots
-- Implemented hierarchical filtering:
+
+I implemented the **hierarchical account model** and filtering support that allows the system to work with account trees such as `Assets:Bank:DBS`.
+
+**What I added**
+- Implemented the `Account` class
+- Added validation of account roots
+- Added support for hierarchical matching through `isUnder()`
+- Integrated account hierarchy into:
     - `list -acc`
     - `balance -acc`
-- Developed `isUnder()` method for prefix-based matching
+
+**Why this mattered**
+- It allowed Ledger67 to support structured accounting categories rather than flat strings
+- It made both reporting and filtering much more useful
+- It was foundational for later features such as balance sheet grouping
 
 ---
 
 #### 5. Storage System (Core Feature)
-- Designed and implemented full persistence system:
-    - `Storage` class
-- Features:
-    - Save/load transactions to file
-    - Immediate persistence after CRUD operations
-    - Robust parsing and error handling
-- Implemented encoding/decoding to handle special characters
+
+I implemented the project’s **transaction persistence layer**.
+
+**What I added**
+- `Storage`
+- Save/load support for transactions
+- Immediate persistence after modifying operations
+- Robust parsing for storage recovery
+- Escaping/unescaping support for special characters in stored text
+
+**Why this was substantial**
+- It turned the system from a session-only CLI into a usable persistent application
+- It had to serialize and restore **multi-posting transactions**
+- It needed to tolerate malformed storage lines without crashing the application
 
 ---
 
-#### 6. Parser Enhancements
-- Main dependency for the design of all the features mentioned above
-    -   Modified the code here to cater for each of the features 
-- Implemented:
-    - Help command (`help`)
-    - Error fallback handling for invalid commands
-- Extended parser to support:
-    - flag-based parsing (`-acc`, `-to`)
-    - multi-step workflows (confirm feature) 
+#### 6. Parser Enhancements and Feature Integration
+
+Many of the features above required extending the `Parser` substantially.
+
+**What I contributed**
+- Added support for:
+    - `balance`
+    - `convert transaction`
+    - `confirm`
+    - `confirm all`
+    - `confirm ID`
+    - `rates refresh`
+- Extended parser handling for:
+    - `-acc`
+    - `-to`
+    - multi-step workflows
+- Helped integrate feature-specific flows into a single consistent command system
+
+**Why this mattered**
+- The parser became the integration point for several major features
+- These additions required both command dispatch logic and validation paths
+- The confirmation feature in particular required careful coordination with transaction rendering and editing
 
 ---
 
-#### 7. Testing
+#### 7. Post-PE-D Review Bug Fixes and Refinements
+
+After the PE-D reviews, I handled a large set of **feature-related fixes and documentation consistency fixes**, especially in the areas I implemented.
+Closed a total of 30 bugs after the PE-D to ensure all bugs are resolved. 
+
+**Examples of fixes I contributed**
+- Fixing Edit command to ensure minimum of 2 postings
+- Handled Corrupted Storage File
+- Rates Refresh warning
+- ID increment error fixed
+- Case Sensitivity Fix for root accounts 
+- Duplicate flags fix
+- Whitespace trimming bug
+- Zero-amount transaction error
+- fixed confirm transaction feature
+- Decimal Rounding Documentation
+- Updated the UG and DG structure, including:
+    - adding a **Table of Contents** to both
+    - reordering sections for easier navigation
+- Fixed and clarified **User Guide / Developer Guide consistency**
+- Added the missing **Developer Guide Appendix E: Instructions for Manual Testing**
+- Fixed and simplified several UML diagrams
+- Added new class diagrams where structural explanation was more suitable than sequence diagrams
+- Resolved documentation bugs and feature-related bugs raised during review, especially around:
+    - currency conversion workflows
+    - confirmation workflow
+    - balance sheet documentation
+    - command format consistency
+    - accounting equation consistency
+    - storage and diagram explanations
+
+This work was important because it improved not just correctness, but also the usability and maintainability of the final product.
+
+---
+
+#### 8. Testing
+- I added and updated tests for the features I implemented and for later fixes that affected earlier behaviour.
 - Created **JUnit tests for all implemented features**
-- Updated existing tests based on edits, mainly:
-    - `ParserTest`
-    - `TransactionsListTest`
-- Ensured:
-    - Compatibility with new features
-    - Full pass of `gradlew clean test` and `check`
+
+**What I did**
+- Added JUnit tests for major features and related logic to improve test coverage
+- Updated existing tests after implementation changes and bug fixes
+- Helped maintain compatibility after parser and account-related changes
+- Contributed to improving test reliability after the later case-sensitivity and behavior fixes
+
+**Examples of relevant test areas**
+- parser workflows
+- transactions list behaviour
+- storage persistence
+- exchange-rate storage and conversion
+- balance sheet behaviour
+- confirmation workflow
 
 ---
 
 ### Contributions to the User Guide
 
-- Added full documentation for:
-    - Balance Sheet feature
-    - Hierarchical filtering
-    - Currency conversion workflows
-- Updated:
-    - Command summary table
-    - Help-related documentation
-- Ensured UG remained consistent with implementation after each update
+I contributed to the documentation for the features I implemented and later helped fix documentation issues found during review.
+
+**Sections and improvements contributed**
+- Balance sheet feature documentation
+- Currency conversion workflow documentation
+- Confirm workflow documentation
+- Hierarchical account filtering documentation
+- Command summary consistency updates
+- Table of Contents and document reordering for readability
+- Post-review fixes to ensure the UG matched the final implementation
+
+I also fixed several documentation bugs after the PE-D reviews, including feature-related inconsistencies and command-format mismatches.
 
 ---
 
 ### Contributions to the Developer Guide
 
-- Implemented full sections for:
-    - Storage Feature
-    - Currency Conversion Feature
-    - Confirm Conversion Workflow
-    - Balance Sheet Feature
-- Added:
-    - Architectural explanations
-    - Design considerations
-    - Limitations and trade-offs
-- Created multiple UML diagrams:
-    - Sequence diagrams for all implemented features
-    - Contributed to Class Diagram (added new classes which I contributed)
+I wrote and updated DG sections related to the features I implemented, and later improved the DG structure after reviewer feedback.
+
+**Sections contributed**
+- Storage Feature
+- Currency Conversion Feature
+- Confirm Conversion Workflow
+- Balance Sheet Feature
+- Hierarchical account-related explanations
+
+**Documentation improvements contributed**
+- Added the required **Appendix E: Instructions for Manual Testing**
+- Added and revised UML diagrams
+- Updated sequence diagrams to follow expected conventions more closely
+- Added new **class diagrams** where they explained component/package structure better than sequence diagrams
+- Added Table of Contents and improved section ordering
+- Fixed post-review issues in DG content and diagram structure
+
+**Diagrams contributed or updated**
+- Storage-related diagrams
+- Currency conversion diagrams
+- Confirm workflow diagrams
+- Balance sheet-related diagram/documentation updates
+- New class diagrams for clearer structural explanation
+- Simplified all sequence diagrams such that are visible
 
 ---
 
 ### Contributions to Team-Based Tasks
 
-- Created and managed:
-    - Issues
-    - Milestones aligned with project deadlines
-- Suggested structured milestone planning based on course timeline
-- Collaborated closely with pangdx (e.g., class diagram integration)
+I contributed to team coordination and project maintenance by:
+- creating and managing issues
+- helping maintain milestones aligned with project deadlines
+- discussing implementation sequencing for features
+- coordinating integration of documentation and diagrams with ongoing code changes
+- Working closely with Pran to ensure we do not fall behind schedule as the other teammate remained unresponsive, this was the biggest struggle of the project.
+- Completed the AboutUs.md page and launched the product website.
+- Released the final versions v1.0, v2.0 and v2.1 with the appropriate UG and DG, for the team to ensure everything is complete 
+
+I also worked with teammates during integration so that the implemented features and documentation stayed aligned across releases.
 
 ---
 
 ### Review / Mentoring Contributions
 
-- Reviewed and discussed bugs with teammates
-- Assisted in debugging feature integrations
-- Ensured consistency between components during development
-- Ensure consistency in UG and DG for all pushes.
+I reviewed feature-related bugs and discussed fixes with teammates, especially where the implemented features interacted with each other.
+
+My contributions included:
+- discussing and debugging integration issues
+- checking consistency between code, UG, and DG
+- helping identify where documentation no longer matched implementation
+- helping refine feature flows and design decisions through discussion
+- Especially for the UML diagrams, helped teammates to ensure proper implementation.
 
 ---
 
 ### Contributions Beyond the Project Team
 
-- Ensured:
-    - Discussion amongst team members to sta on Task with the project.
-    - Code quality through testing
-    - Documentation consistency across UG and DG
-- Provided internal guidance on:
-    - Collaborated with Pran to come up with the product
-    - feature design decisions
-    - system integration approaches
-        - Using Sequence Diagrams and Class Diagrams sketches
+Beyond direct coding, I helped keep the project coherent by:
+- improving documentation quality and consistency across UG and DG
+- helping drive discussion around feature design and integration
+- ensuring post-review fixes were reflected not only in code but also in diagrams and developer-facing documentation
+- contributing to the team’s technical direction in areas such as:
+    - system integration
+    - documentation structure
+    - diagram usage and cleanup
+  
+In terms of helping others:
+- Contributed to a total of 14 bugs in the PE-D, putting in a deep genuine effort to help other's projects.
 
 ---
 
-## Contributions to the Developer Guide (Extracts)
-#### Class Diagrams
+## Contributions to the Developer Guide (Extracts) - Non-exhaustive
 
-The following class diagram shows the relationships between all components:
+## Table of Contents
 
-![Class Diagram](./diagrams/ClassDiagram.png)
+### 3.1 Transaction Flow
+**Implementer: Pran, JJ**
 
-### Storage Feature
+The transaction flow manages the lifecycle of financial records, ensuring that every entry satisfies the fundamental accounting equation before being persisted.
+
+#### 3.1.1 Create (Add) Flow
+The addition process supports two paths: **Manual Entry** (providing specific postings) or **Preset Entry** (using templates).
+*   **Input**: If `isUiAssistOn` is true, the `UiAssistFactory` interactively prompts the user for fields. Otherwise, the `Parser` extracts flags directly.
+*   **Processing**:
+    *   If a `-preset` is used, the `PresetHandler` generates a `List<Posting>` (e.g., swapping Assets for Expenses).
+    *   The `Parser` validates the currency and date format.
+    *   The `Transaction` object is instantiated and must pass an `isBalanced()` check (Sum of postings ≈ 0).
+*   **Finalization**: `TransactionsList` appends the transaction, triggers `Storage` to save, and refreshes the background `balance-sheet.csv`.
+
+![Add Flow Diagram](../diagrams/addtransactionflow.png)
+
+#### 3.1.2 Read (List/Filter) Flow
+Listing is non-destructive and supports layered filtering.
+*   **Filtering**: `TransactionsList` applies filters in sequence: Date Range → Regex Match → Account Hierarchy (e.g., filtering for `Assets` includes `Assets:Cash`).
+*   **View-Only Conversion**: If the `-to` flag is present, the `Parser` sets a **Pending State**. The `TransactionsList` renders the converted values for preview but does not modify the underlying data unless a `confirm` command follows.
+
+![List Flow Diagram](../diagrams/listtransactionflow.png)
+
+#### 3.1.3 Update (Edit) Flow
+Updates allow modifying any part of an existing transaction while enforcing re-validation.
+*   **Lookup**: `TransactionsList` retrieves the transaction by ID.
+*   **Modification**: The `Transaction.update()` method selectively replaces fields (Date, Desc, Currency, or Postings).
+*   **Validation**: If postings are updated, the `isBalanced()` check is re-run. If the new set is unbalanced, the update is aborted.
+
+![Update Flow Diagram](../diagrams/updatetransactionflow.png)
+
+#### 3.1.4 Delete Flow (Single & Bulk)
+Deletion supports targeted removal or mass-clearing based on filters.
+*   **Single**: Deletes a specific transaction by its unique ID.
+*   **Bulk**: Uses the same filtering engine as the `list` command to identify a sub-set of transactions for removal.
+*   **Safety**: Bulk deletion requires at least one filter flag to prevent accidental total wipes (users must use `clear` for that).
+
+![Delete Flow Diagram](../diagrams/deletetransactionflow.png)
+
+---
+
+### 3.3 Storage Feature
 
 Implementer: JJ
 The storage feature is responsible for persisting transaction data to local file storage and restoring it upon application startup.
 
 ---
 
-#### 1. Transaction Persistence
+#### 3.3.1 Transaction Persistence
 The `Storage` class manages reading from and writing to a local text file (`ledger.txt`).
 * Transactions are saved in a tab-separated format
 * Each transaction includes ID, date, description, amount, type, and currency
@@ -211,17 +374,16 @@ This ensures:
 
 ---
 
-#### 2. Loading Transactions
+#### 3.3.2 Loading Transactions
 Upon application startup, `Storage` loads all previously saved transactions into memory.
 * Reads file line-by-line
 * Parses each line into a `Transaction` object
 * Reconstructs transaction IDs and updates the auto-increment counter
-
-Invalid or malformed lines are safely ignored to prevent crashes.
+* Invalid or malformed lines are safely skipped to prevent crashes.
 
 ---
 
-#### 3. Data Encoding and Decoding
+#### 3.3.3 Data Encoding and Decoding
 To ensure file integrity, special characters are handled using escaping:
 * `\t` for tabs
 * `\n` for newlines
@@ -230,7 +392,7 @@ To ensure file integrity, special characters are handled using escaping:
 
 ---
 
-#### 4. Integration with TransactionsList
+#### 3.3.4 Integration with TransactionsList
 The `TransactionsList` component interacts directly with `Storage`:
 * Calls `load()` during initialization
 * Calls `save()` after every modification
@@ -241,14 +403,14 @@ This design ensures:
 
 ---
 
-#### Design Considerations
+#### 3.3.5 Design Considerations
 * **Immediate Persistence**: Data is saved after every operation to prevent loss
 * **Simple File Format**: Tab-delimited text allows easy debugging and readability
 * **Robustness**: Invalid data is safely handled without crashing the application
 * **Encapsulation**: Storage logic is isolated from business logic in `TransactionsList`
 
-#### Sequence Diagram
-![Storage Sequence Diagram](diagrams/StorageSequence.png)
+#### 3.3.6 Sequence Diagram
+![Storage Sequence Diagram](../diagrams/StorageSequence.png)
 
 The diagram above shows:
 * `TransactionsList` triggering save operations
@@ -257,7 +419,7 @@ The diagram above shows:
 
 ---
 
-### Currency Conversion Feature
+### 3.4 Currency Conversion Feature
 
 Implementer: JJ
 
@@ -265,7 +427,7 @@ The currency conversion feature extends the system by introducing dynamic curren
 
 ---
 
-#### Integration with Architecture
+#### 3.4.1 Integration with Architecture
 This feature introduces and integrates the following components:
 * `CurrencyConverter`: Core conversion logic
 * `ExchangeRateData`: Data model for exchange rates
@@ -273,14 +435,14 @@ This feature introduces and integrates the following components:
 * `LiveExchangeRateService`: Fetches real-time exchange rates
 
 These components are connected as follows:
-* `Duke` initializes the converter and injects it into `Parser` and `TransactionsList`
+* `Ledger67` initializes the converter and injects it into `Parser` and `TransactionsList`
 * `Parser` handles `convert` and `rates` commands
 * `TransactionsList` uses the converter for display-level conversions
 * `ExchangeRateStorage` ensures exchange rates persist across application runs
 
 ---
 
-#### 1. Simple Currency Conversion
+#### 3.4.2 Simple Currency Conversion
 The `CurrencyConverter` class provides the core conversion logic via the `convert()` method.
 * Validates currencies using `CurrencyValidator`
 * Converts via a base currency for consistency
@@ -288,7 +450,7 @@ The `CurrencyConverter` class provides the core conversion logic via the `conver
 
 ---
 
-#### 2. Exchange Rate Storage
+#### 3.4.3 Exchange Rate Storage
 The `ExchangeRateStorage` component ensures exchange rate data is persisted locally.
 * Loads exchange rates from a JSON file at application startup
 * Saves updated rates after fetching from the API
@@ -300,7 +462,7 @@ This allows the application to:
 
 ---
 
-#### 3. Live Exchange Rate Integration
+#### 3.4.4 Live Exchange Rate Integration
 The `LiveExchangeRateService` fetches real-time exchange rates from an external API.
 * Sends HTTP requests to retrieve latest rates
 * Parses JSON responses into `ExchangeRateData`
@@ -311,7 +473,7 @@ A fallback mechanism in `Duke` ensures the system remains functional if live dat
 
 ---
 
-#### 4. Conversion of Stored Transactions
+#### 3.4.5 Conversion of Stored Transactions
 Stored transactions can be converted dynamically without modifying underlying data.
 Implemented in:
 * `Parser` (`convert transaction` command)
@@ -324,7 +486,7 @@ Features:
 
 ---
 
-#### 5. Display Currency Conversion (List View)
+#### 3.4.6 Display Currency Conversion (List View)
 Transactions can be displayed in a selected currency using:
 ```
 list -to USD
@@ -336,13 +498,13 @@ list -to USD
 
 ---
 
-#### Design Considerations
+#### 3.4.7 Design Considerations
 * **Separation of Concerns**: Conversion, storage, and API handling are modularized
 * **Persistence**: Exchange rates are stored locally to improve performance and reliability
 * **Resilience**: Fallback data ensures continued functionality without API access
 
-#### Sequence Diagram
-![Convert Transaction Sequence Diagram](diagrams/ConvertTransactionSequence.png)
+#### 3.4.8 Sequence Diagram
+![Convert Transaction Sequence Diagram](../diagrams/ConvertTransactionSequence.png)
 
 The diagram above illustrates how user input flows through the system:
 * `Parser` extracts and validates inputs
@@ -353,7 +515,7 @@ The diagram above illustrates how user input flows through the system:
 ---
 
 
-#### 6. Confirm and Store Converted Transactions
+### 3.5 Confirm and Store Converted Transactions
 
 This feature extends the currency conversion system by allowing users to **persist converted values into storage**,
 instead of keeping them as view-only.
@@ -361,7 +523,7 @@ Previously, all conversion operations (`convert`, `convert transaction`, `list t
 
 ---
 
-#### Implementation Details
+#### 3.5.1 Implementation Details
 This feature is implemented primarily in the `Parser` component through **stateful command handling**.
 
 New internal state variables in `Parser`:
@@ -370,9 +532,7 @@ New internal state variables in `Parser`:
 * `pendingTargetCurrency`: stores the selected target currency
 * `pendingFromListView`: indicates whether the conversion came from list view
 
-![Transaction Presets Diagram](diagrams/transactionspreset.png)
-
-##### Workflow
+#### 3.5.2 Workflow
 ##### Case 1: `convert transaction`
 1. User runs:
    ```
@@ -392,6 +552,7 @@ New internal state variables in `Parser`:
         * amount
         * currency
     * Persists changes via `Storage.save()`
+
 ---
 
 ##### Case 2: `list -to`
@@ -412,7 +573,7 @@ New internal state variables in `Parser`:
 
 ---
 
-#### Design Considerations
+#### 3.5.3 Design Considerations
 * **Explicit Confirmation Required**
     * Prevents accidental data mutation
     * Maintains safety of original financial records
@@ -424,23 +585,26 @@ New internal state variables in `Parser`:
 
 ---
 
-#### Sequence Diagram
-![Confirm Transaction Sequence Diagram](diagrams/ConfirmTransactionSequence.png)
+#### 3.5.4 Sequence Diagram
+![Confirm Transaction Sequence Diagram](../diagrams/ConfirmTransactionSequence.png)
 
-### Balance Sheet Feature
+### 3.7 Balance Sheet Feature
 Implementer: JJ
 
 The Balance Sheet feature allows users to generate a real-time summary of their financial position based on the accounting equation:
 
 ```
-Assets = Equity - Liabilities + (Income - Expenses)
+Assets = Liabilities + Equity
+
+Where Equity is affected by Income and Expenses:
+Equity = Initial Equity + (Income - Expenses)
 ```
 
 It aggregates all transactions and computes totals across hierarchical account categories.
 
 ---
 
-#### Integration with Architecture
+#### 3.7.1 Integration with Architecture
 
 This feature primarily extends:
 
@@ -454,7 +618,7 @@ New component:
 
 ---
 
-#### 1. Command Handling
+#### 3.7.2 Command Handling
 
 The `Parser` handles the following command formats:
 ```
@@ -470,13 +634,13 @@ The parser:
 
 ---
 
-#### 2. Balance Aggregation Logic
+#### 3.7.3 Balance Aggregation Logic
 Implemented in `TransactionsList`:
 ```
 private Map<String, Double> buildBalanceSheetTotals(...)
 ````
 
-##### Workflow:
+##### 3.7.4 Workflow:
 
 1. Iterate through all transactions
 2. Iterate through all postings
@@ -487,7 +651,7 @@ private Map<String, Double> buildBalanceSheetTotals(...)
 5. Aggregate totals into a `Map<String, Double>`
 
 ---
-#### 3. Hierarchical Account Support
+#### 3.7.5 Hierarchical Account Support
 
 The feature leverages:
 ```
@@ -501,7 +665,7 @@ This enables:
 
 ---
 
-#### 4. Income and Expense Handling
+#### 3.7.6 Income and Expense Handling
 
 Income and Expenses are incorporated into Equity:
 
@@ -522,7 +686,7 @@ Assets = Liabilities + Equity
 
 ---
 
-#### 5. Currency Conversion
+#### 3.7.7 Currency Conversion
 
 If `-to` is specified:
 
@@ -532,7 +696,7 @@ If `-to` is specified:
 
 ---
 
-#### 6. Output Formatting
+#### 3.7.8 Output Formatting
 
 Handled by the `BalanceSheet` class:
 
@@ -549,14 +713,14 @@ Handled by the `BalanceSheet` class:
 
 ---
 
-#### 7. CSV Export
+#### 3.7.9 CSV Export
 
 Each execution of `balance` triggers:
 ```
 balanceSheet.exportToCsv("data/balance-sheet.csv");
 ```
 
-##### File Characteristics:
+##### 3.7.10 File Characteristics:
 
 * Overwrites existing file
 * Contains:
@@ -567,27 +731,25 @@ balanceSheet.exportToCsv("data/balance-sheet.csv");
 
 ---
 
-#### Design Considerations
+#### 3.7.11 Design Considerations
 **1. Separation of Concerns**
 * Aggregation → `TransactionsList`
 * Presentation → `BalanceSheet`
-  **2. Non-Destructive Operations**
 
+**2. Non-Destructive Operations**
 * Conversion is view-only
 * No mutation of stored transactions
 
 **3. Reuse of Existing Structures**
-
 * Uses `Posting`, `Account`, `CurrencyConverter`
 * Avoids duplicating logic
 
 **4. Hierarchical Scalability**
-
 * Supports deep account nesting without redesign
 
 ---
 
-#### Limitations
+#### 3.7.12 Limitations
 
 * Filtered views (`-acc`) may not balance fully
 * Mixed currencies require `-to` for meaningful totals
@@ -595,22 +757,19 @@ balanceSheet.exportToCsv("data/balance-sheet.csv");
 
 ---
 
-#### Sequence Diagram
-![Balance Sheet Sequence Diagram](diagrams/BalanceSheetSequence.png)
-
-### Hierarchical Account Registry & Filtering Feature
+###  3.9 Hierarchical Account Registry & Filtering Feature
 Implementer: JJ
 
 This feature allows users to filter transactions based on hierarchical account structures using the `list -acc` command.
 
 ---
-#### Motivation
+#### 3.9.1 Motivation
 
 As the number of transactions grows, users need a way to quickly isolate transactions belonging to specific financial categories such as Assets, Expenses, or Income.
 Hierarchical account structures (e.g., `Assets:Bank:DBS`) make simple string matching insufficient. Hence, a structured filtering mechanism was implemented.
 
 ---
-#### Implementation
+#### 3.9.2 Implementation
 This feature is implemented across three main components:
 
 1. **Parser**
@@ -630,17 +789,435 @@ This feature is implemented across three main components:
 
 ---
 
-#### Core Logic
+#### 3.9.3 Core Logic
 The key method used is:
 
 public boolean isUnder(String parentAccount)
 
-#### Sequence Diagram
-![Hierarchical Account Registry & Filtering Feature Diagram](diagrams/HierachalAccRegFiltering.png)
+#### 3.9.4 Sequence Diagram
+![Hierarchical Account Registry & Filtering Feature Diagram](../diagrams/HierachalAccRegFiltering.png)
+
+## 4. Appendix A: Product Scope
+
+### 4.1 Target User Profile
+
+Ledger67 is designed for:
+
+- Individuals who want to track personal financial transactions
+- Small business owners who require simple expense tracking
+- Students learning about financial management and accounting
+- Users comfortable with command-line interfaces
+- Users who prefer typing over graphical interfaces
+- Users dealing with multiple currencies who require quick and reliable currency conversion
+
+---
+
+### 4.2 Value Proposition
+
+Ledger67 addresses several key needs:
+
+1. **Simplified Financial Tracking**  
+   Provides a structured way to record and manage financial transactions using double-entry bookkeeping.
+
+2. **Rapid Data Entry**  
+   Command-line interface enables faster input for users familiar with typing workflows.
+
+3. **Portability**  
+   Lightweight Java application that runs on any system with Java 17+.
+
+4. **Multi-Currency Support**  
+   Allows users to convert and view transactions across currencies without modifying stored data.
+
+5. **Live Exchange Rate Integration**  
+   Supports real-time rate updates for more accurate financial comparisons.
+
+---
+
+## 5. Appendix B: User Stories
+
+| Version | As a ... | I want to ...                              | So that I can ...                                            |
+|---------|----------|--------------------------------------------|--------------------------------------------------------------|
+| v1.0    | new user | see usage instructions                     | refer to them when I forget how to use the application       |
+| v1.0    | user     | add a new transaction                      | record my financial activities                               |
+| v1.0    | user     | list all transactions                      | view my transaction history                                  |
+| v1.0    | user     | edit a transaction                         | correct mistakes in previously recorded transactions         |
+| v1.0    | user     | delete a transaction                       | remove erroneous or duplicate entries                        |
+| v1.0    | user     | have my transactions automatically saved   | avoid losing data between sessions                           |
+| v1.0    | user     | load previously saved transactions         | continue tracking finances across sessions                   |
+| v1.0    | user     | convert currencies                         | understand values across different currencies                |
+| v1.0    | user     | convert a transaction to another currency  | quickly view equivalent values without modifying stored data |
+| v1.0    | user     | view transactions in another currency      | compare spending consistently across currencies              |
+| v1.0    | user     | refresh exchange rates                     | ensure conversion uses up-to-date rates                      |
+| v2.0    | user     | filter transactions by date                | review transactions from specific time periods               |
+| v2.0    | user     | search transactions by description         | find specific transactions quickly                           |
+| v2.0    | user     | validate my transactions                   | ensure my double-entry accounts are balanced                 |
+| v2.0    | user     | add new categories under each account type | better organize financial data                               |
+| v2.0    | user     | categorise transactions                    | filter by transaction type                                   |
+| v2.0    | user     | generate balance sheet                     | understand financial position                                |
+| v2.0    | user     | export balance sheet                       | analyse data externally                                      |
+| v2.0    | user     | filter balance sheet by account            | focus on specific categories                                 |
+
+---
 
 
-## Contributions to the User Guide (Extracts)
-### Currency Conversion: `convert`
+## 6. Appendix C: Non-Functional Requirements
+
+### 6.1 Reliability
+- The application should not crash on invalid user input
+- Data should remain consistent during all CRUD operations
+- Error messages should be informative and actionable
+- Exchange rate data should be validated before use
+
+### 6.2 Usability
+- Command syntax should be intuitive and consistent
+- Help text should be accessible via a help command
+- Error messages should clearly indicate what went wrong and how to fix it
+- Conversion commands should clearly distinguish between stored data and display-only values
+
+### 6.3 Maintainability
+- Code should follow Java coding standards
+- Critical functionality should be covered by unit tests
+- Code should include meaningful documentation and comments
+- Separation of concerns should be maintained across components
+
+---
+
+## 7. Appendix D: Glossary
+
+- **Transaction**: A financial record containing a date, description, currency, and a list of postings that together form a balanced entry.
+- **Posting**: A single entry linking an account to a numerical amount within a transaction.
+- **Account**: A category used to classify financial data (e.g., Assets, Expenses, Income), supporting hierarchical structures.
+- **Double-Entry Accounting**: An accounting method where every transaction affects at least two accounts and must balance.
+- **Currency Code**: Three-letter ISO currency code (SGD, USD, EUR).
+- **Parser**: Component responsible for interpreting user commands and delegating execution.
+- **TransactionsList**: Component managing all transaction objects and performing filtering, updates, and aggregation.
+- **Validation**: Ensuring that user inputs meet required constraints before processing.
+- **Auto-increment ID**: Unique identifier automatically assigned to each transaction.
+- **CRUD Operations**: Create, Read, Update, Delete operations for managing data.
+- **Balance Sheet**: A financial statement summarizing Assets, Liabilities, and Equity.
+
+---
+
+## 8. Appendix E: Instructions for Manual Testing
+
+This section provides guidance for testers to validate the key features of Ledger67.  
+It complements the User Guide by outlining important test flows and edge cases.
+
+---
+
+### 8.1 Launching the Application
+
+**Preconditions:**
+- Java 17 or above is installed
+- Application is compiled or JAR file is available
+
+**Steps:**
+1. Navigate to the project directory
+2. Run:
+
+```
+java -jar tp.jar
+```
+
+or
+
+```
+./gradlew run
+```
+
+---
+
+### 8.2 Adding Transactions
+
+**Test basic add:**
+
+```
+add -date 01/01/2026 -desc "Lunch" -p "Assets:Cash -10" -p "Expenses:Food 10" -c SGD
+```
+
+**Expected:**
+- Transaction is added successfully
+- `list` shows the new transaction
+
+---
+
+### 8.3 Validation of Minimum Postings
+
+**Test invalid case:**
+
+```
+add -date 01/01/2026 -desc "Invalid" -p "Assets:Cash 10" -c SGD
+```
+
+**Expected:**
+- Error indicating at least 2 postings required
+- Transaction is NOT added
+
+---
+
+### 8.4 Listing and Filtering
+
+```
+list
+list -acc Expenses
+list -match Lunch
+list -begin 01/01/2026 -end 31/12/2026
+```
+
+**Expected:**
+- Filters are applied correctly
+- No data is modified
+
+---
+
+### 8.5 Editing Transactions
+
+**Valid edit:**
+
+```
+edit 1 -desc "Updated Lunch"
+```
+
+**Invalid edit (1 posting):**
+
+```
+edit 1 -p "Assets:Cash -20"
+```
+
+**Expected:**
+- Valid edit succeeds
+- Invalid edit is rejected
+- Original transaction remains unchanged
+
+---
+
+### 8.6 Deleting Transactions
+
+```
+delete 1
+delete -match Lunch
+```
+
+**Expected:**
+- Correct transactions are removed
+- Bulk delete requires at least one filter
+
+---
+
+### 8.7 Currency Conversion
+
+```
+convert -a 100 -from USD -to SGD
+convert transaction 1 -to SGD
+```
+
+**Expected:**
+- Conversion is displayed
+- Stored values remain unchanged until confirmed
+
+---
+
+### 8.8 Confirm Feature
+
+```
+convert transaction 1 -to SGD
+confirm
+```
+
+**Expected:**
+- Transaction is updated permanently
+- Currency and values are changed
+
+---
+
+### 8.9 List Conversion (View Only)
+
+```
+list -to USD
+```
+
+**Expected:**
+- Converted values displayed
+- Original data remains unchanged
+
+---
+
+### 8.10 Balance Sheet
+
+```
+balance
+balance -acc Assets
+balance -to USD
+```
+
+**Expected:**
+- Aggregated totals displayed
+- Equation check shown
+- Filtered view may not balance
+
+---
+
+### 8.11 Monetary Precision (Rounding)
+
+```
+add -date 01/01/2026 -desc "Precision Test" -p "Assets:Cash 100.999999" -p "Expenses:Food -100.999999" -c SGD
+```
+
+**Expected:**
+- Values are stored as 2 decimal places
+- Example: 100.999999 → 101.00
+
+---
+
+### 8.12 UI Assist Mode
+
+```
+uiassist -on
+add
+```
+
+**Expected:**
+- Prompts guide input step-by-step
+- Resulting transaction is valid
+
+---
+
+### 8.13 Edge Cases
+
+Test the following:
+
+- Invalid date format
+- Invalid currency
+- Unbalanced transactions
+- Duplicate flags
+- Empty input
+
+**Expected:**
+- System rejects invalid input gracefully
+- No crash occurs
+
+---
+
+### 8.14 Notes for Testers
+
+- Stored data is persisted automatically after each modification
+- Conversion features are **non-destructive** unless confirmed
+- Filtering operations do not modify stored data  
+
+## Contributions to the User Guide (Extracts) - Non-Exhaustive
+
+### Table of Contents
+
+### 3.3 Sign Convention
+Ledger67 uses a **signed amount model** instead of debit/credit.
+* `+` indicates an **increase**
+* `-` indicates a **decrease**
+
+#### Recommended Usage
+
+| Account Type                | Increase | Decrease |
+|-----------------------------|----------|----------|
+| Assets, Expenses            | `+`      | `-`      |
+| Liabilities, Equity, Income | `-`      | `+`      |
+
+#### Note
+Ledger67 only checks that transactions are **balanced**, and does not enforce sign conventions.
+Users are encouraged to follow the recommended usage for consistency.
+
+### 3.4 Monetary Precision
+Ledger67 stores monetary values using **2 decimal places**, which is standard for currency amounts.
+
+If users enter values with more than 2 decimal places, Ledger67 will round them before storing them.
+
+Examples:
+- `100.999999` is stored as `101.00`
+- `50.1` is stored as `50.10`
+- `75.555` is stored as `75.56`
+
+Users should therefore avoid entering excessive decimal precision if exact sub-cent values are important.
+
+### 4.3 Listing and Filtering Transactions: `list`
+Displays recorded transactions. You can view all transactions or use filters to narrow down the results by date, account, keyword, or currency.
+
+**Format**: `list [-acc ACCOUNT] [-begin DATE] [-end DATE] [-match REGEX] [-to CURRENCY]`
+
+**Parameters**:
+- `-acc ACCOUNT`: Only show transactions containing this account (and only show that specific account's line).
+- `-begin DATE`: Show transactions on or after this date (DD/MM/YYYY).
+- `-end DATE`: Show transactions on or before this date (DD/MM/YYYY).
+- `-match REGEX`: Show transactions where the description matches the given keyword or regular expression.
+- `-to CURRENCY`: Display all values converted to a specific currency for viewing purposes.
+
+> **Note on Currency**: When using `-to`, the displayed values are **view-only**. To permanently save these converted values to your ledger, follow up with the `confirm` command.
+
+**Examples**:
+*   **View everything**: `list`
+*   **View January food expenses**: `list -acc Expenses:Food -begin 01/01/2026 -end 31/01/2026`
+*   **Search for any "Lunch" or "Dinner"**: `list -match "(Lunch|Dinner)"`
+*   **View all expenses in USD**: `list -acc Expenses -to USD`
+
+#### Example Output
+```
+
+ID: 2 | Date: 2026-03-19 | Desc: Salary | [USD]
+Assets:Bank:DBS              :    3000.00
+
+ID: 3 | Date: 2026-03-20 | Desc: Transfer | [SGD]
+Assets:Cash                  :    -500.00
+
+```
+
+---
+
+#### Combining with Currency View
+
+You can combine filtering with currency display:
+
+```
+
+list -acc Assets -to USD
+
+```
+
+This will:
+- Filter transactions under `Assets`
+- Display converted values in USD
+
+---
+
+#### Notes
+- This is a **view feature** — it does not modify stored data.
+- Filtering works based on account hierarchy (not simple text matching).
+
+---
+
+#### View Converted Values of All Listed Transactions: `list -to TARGET_CURRENCY`
+Views all existing transactions to a different currency.
+
+**Format**: `list -to TARGET_CURRENCY`
+
+**Parameters**:
+- `-to TARGET_CURRENCY`: Target currency code - `SGD`, `USD`, or `EUR`
+
+**Example**:
+```
+list -to SGD
+```
+Output:
+```
+ID: 1 | Date: 18/03/2026 | Desc: Office supplies | [SGD -> USD]
+    Assets:Cash                    :     -45.50 | Display: -33.97 USD
+    Expenses:OfficeSupplies        :      45.50 | Display: 33.97 USD
+```
+**Note**
+- This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
+- To store conversions:
+    - Use `confirm all` to store all transactions
+    - Use `confirm ID` to store a specific transaction
+
+---
+
+### 4.7 Currency Conversion: `convert`
 Converts amounts between different currencies using current exchange rates.
 
 **Format**: `convert -a AMOUNT -from SOURCE_CURRENCY -to TARGET_CURRENCY`
@@ -661,7 +1238,7 @@ Output:
 **Note**
 - This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
 
-### Converting Existing Transactions: `convert transaction`
+#### Converting Existing Transactions: `convert transaction`
 Converts an existing transaction to a different currency.
 
 **Format**: `convert transaction ID -to TARGET_CURRENCY`
@@ -682,30 +1259,7 @@ Transaction 3: 50.00 USD = 67.75 SGD
 - This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
 - To store the converted value, use the `confirm` command.
 
-### View Converted Values of All Listed Transactions: `list -to TARGET_CURRENCY`
-Views all existing transactions to a different currency.
-
-**Format**: `list -to TARGET_CURRENCY`
-
-**Parameters**:
-- `-to TARGET_CURRENCY`: Target currency code - `SGD`, `USD`, or `EUR`
-
-**Example**:
-```
-list -to SGD
-```
-Output:
-```
-ID: 1 | Date: 18/03/2026 | Desc: "Office supplies purchase" | Amount: 45.50 | Type: debit | Currency: SGD
-ID: 2 | Date: 18/03/2026 | Desc: "Consulting fee received" | Amount: 500.00 | Type: credit | Currency: USD | Display: 669.72 SGD
-```
-**Note**
-- This is a view-mode feature only. It does NOT overwrite the stored transaction currency or amount.
-- To store conversions:
-    - Use `confirm all` to store all transactions
-    - Use `confirm ID` to store a specific transaction
-
-### Refreshing Exchange Rates: `rates`
+### 4.8 Refreshing Exchange Rates: `rates`
 Refreshes live exchange rates from external sources.
 
 **Format**: `rates refresh`
@@ -719,7 +1273,7 @@ Output:
 Exchange rates refreshed successfully for 2026-03-19.
 ```
 
-### Confirming Converted Transactions: `confirm`
+### 4.9 Confirming Converted Transactions: `confirm`
 
 After using conversion commands, Ledger67 allows you to **store the converted values permanently**.
 
@@ -727,7 +1281,7 @@ By default, all conversions are **view-only**. You must explicitly confirm to up
 
 ---
 
-#### 1. Confirming a Single Converted Transaction
+#### Confirming a Single Converted Transaction
 
 After using:
 
@@ -756,7 +1310,7 @@ confirm
 
 ---
 
-#### 2. Confirming Transactions from List View
+#### Confirming Transactions from List View
 
 After using:
 
@@ -798,75 +1352,7 @@ confirm 2
 
 ---
 
-### Filtering Transactions by Account: `list -acc`
-Allows you to filter transactions based on hierarchical account categories.
-
-Ledger67 supports **hierarchical account names** using `:`. This means accounts can be structured into categories and subcategories such as:
-
-- `Assets:Cash`
-- `Assets:Bank:DBS`
-- `Expenses:Food`
-- `Income:Salary`
-
-#### Format
-```
-
-list -acc ACCOUNT
-
-```
-
-#### Examples
-```
-
-list -acc Assets
-list -acc Assets:Bank
-list -acc Expenses
-
-```
-
-#### Behaviour
-- Displays only transactions that contain postings under the specified account.
-- Supports hierarchical filtering:
-    - `Assets` → shows ALL asset-related postings (Cash, Bank, etc.)
-    - `Assets:Bank` → shows only bank-related postings
-- Filtering is **case-insensitive**.
-
-#### Example Output
-```
-
-ID: 2 | Date: 2026-03-19 | Desc: Salary | [USD]
-Assets:Bank:DBS              :    3000.00
-
-ID: 3 | Date: 2026-03-20 | Desc: Transfer | [SGD]
-Assets:Cash                  :    -500.00
-
-```
-
----
-
-#### Combining with Currency View
-
-You can combine filtering with currency display:
-
-```
-
-list -acc Assets -to USD
-
-```
-
-This will:
-- Filter transactions under `Assets`
-- Display converted values in USD
-
----
-
-#### Notes
-- This is a **view feature** — it does not modify stored data.
-- Filtering works based on account hierarchy (not simple text matching).
-
----
-
-### Viewing the Balance Sheet: `balance`
+### 4.10 Viewing the Balance Sheet: `balance`
 
 Displays a summary of your financial position based on the accounting equation:
 ```
@@ -874,6 +1360,7 @@ Assets = Liabilities + Equity
 
 ```
 This command aggregates all transactions and shows totals by account category.
+
 ---
 
 #### Basic Format
@@ -909,7 +1396,7 @@ Equation Status                     PASS
 
 ---
 
-### Including Income and Expenses
+#### Including Income and Expenses
 Ledger67 automatically incorporates:
 
 - **Income** → increases Equity
@@ -925,7 +1412,7 @@ Assets = Liabilities + Equity
 ```
 
 ---
-### Filtering Balance Sheet by Account: `balance -acc`
+#### Filtering Balance Sheet by Account: `balance -acc`
 
 Allows you to generate a balance sheet for a specific account hierarchy.
 
@@ -958,7 +1445,7 @@ Equation Status: FILTERED VIEW (may not balance)
 ```
 
 ---
-### Viewing Balance Sheet in Another Currency: `balance -to`
+#### Viewing Balance Sheet in Another Currency: `balance -to`
 Displays all values converted into a target currency.
 
 #### Format
@@ -982,7 +1469,7 @@ balance -to USD
 
 ---
 
-### Combining Filters and Conversion
+#### Combining Filters and Conversion
 
 You can combine both options:
 
@@ -993,15 +1480,15 @@ balance -acc Assets:Bank -to USD
 ```
 
 ---
-### Exporting Balance Sheet
+#### Exporting Balance Sheet
 
 Each time the `balance` command is run:
 
 - A CSV file is generated at:
 ```
 data/balance-sheet.csv
-
 ```
+
 #### File Contents
 The CSV includes:
 - Account names
@@ -1015,9 +1502,20 @@ The CSV includes:
 
 ---
 
-### Important Notes
+#### Important Notes
 
 - `balance` is a **read-only feature**
 - It does NOT modify any transactions
 - Currency conversion is **view-only**
 - Filtering may result in non-balanced views
+
+---
+
+## 7. Tips for Effective Use
+
+1. **Be Consistent**: Use clear, descriptive transaction descriptions that you'll understand later.
+2. **Regular Updates**: Record transactions regularly to maintain accurate financial records.
+3. **Review Periodically**: Use the `list` command weekly or monthly to review your financial position.
+4. **Backup Important Data**: Since transactions are stored in memory, consider exporting or noting down important transactions.
+5. **Learn the Basics**: Understanding basic accounting principles will help you get the most out of Ledger67.
+6. **Currency Conversion**: Use the view and confirm feature efficiently to better manage multiple currencies,
