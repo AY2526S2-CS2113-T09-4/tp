@@ -489,6 +489,7 @@ New internal state variables in `Parser`:
         * amount
         * currency
     * Persists changes via `Storage.save()`
+    
 ---
 
 ##### Case 2: `list -to`
@@ -556,6 +557,7 @@ The `PresetHandler` class acts as a factory for `Posting` objects.
     *   **Pros:** Highly flexible.
     *   **Cons:** Increases complexity of the storage system and requires a "Template Management" UI.
     *   **Decision:** Hardcoded presets were chosen for the MVP to provide immediate value for common tasks (Income, Stocks, Expenses) with zero configuration required.
+
 ---
 
 ### 3.7 Balance Sheet Feature
@@ -705,18 +707,16 @@ balanceSheet.exportToCsv("data/balance-sheet.csv");
 **1. Separation of Concerns**
 * Aggregation → `TransactionsList`
 * Presentation → `BalanceSheet`
-**2. Non-Destructive Operations**
 
+**2. Non-Destructive Operations**
 * Conversion is view-only
 * No mutation of stored transactions
 
 **3. Reuse of Existing Structures**
-
 * Uses `Posting`, `Account`, `CurrencyConverter`
 * Avoids duplicating logic
 
 **4. Hierarchical Scalability**
-
 * Supports deep account nesting without redesign
 
 ---
