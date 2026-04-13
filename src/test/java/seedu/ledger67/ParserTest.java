@@ -489,7 +489,7 @@ public class ParserTest {
         int id = t.getId();
 
         outputStreamCaptor.reset();
-        String input = "edit " + id + " -p \"Expenses:Food 10\"\n"
+        String input = "edit " + id + " -p \"Expenses:Food 10\" -p \"Assets:Cash 20\"\n"
                 + "edit " + id + " -desc Tea -p \"Expenses:Food 10\" -p \"Assets:Cash -10\"\n"
                 + "list\n"
                 + "exit";
