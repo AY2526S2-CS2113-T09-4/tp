@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,16 +23,17 @@ public class TransactionsListTest {
 
     private TransactionsList list;
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+    private PrintStream originalOut;
 
     private Transaction createTransaction(String date, String description,
                                           double amount, String type, String currency) {
         List<Posting> postings = new ArrayList<>();
         if (type.equals("debit")) {
             postings.add(new Posting("Expenses:General", amount));
-            postings.add(new Posting("Assets:Cash", -amount)); // Credit balancing entry
+            postings.add(new Posting("Assets:Cash", -amount));
         } else {
             postings.add(new Posting("Assets:Cash", amount));
-            postings.add(new Posting("Expenses:General", -amount)); // Debit balancing entry
+            postings.add(new Posting("Income:Salary", amount));
         }
         return new Transaction(date, description, postings, currency);
     }
@@ -51,11 +52,13 @@ public class TransactionsListTest {
         list.setCurrencyConverter(converter);
 
         outputStreamCaptor.reset();
+        originalOut = System.out;
         System.setOut(new PrintStream(outputStreamCaptor));
     }
 
     @AfterEach
     public void tearDown() {
+        System.setOut(originalOut);
         deleteFile(TEST_FILE_PATH);
     }
 
@@ -68,7 +71,7 @@ public class TransactionsListTest {
 
     @Test
     public void testAddAndListTransactions() {
-        Transaction t = createTransaction("15/03/2023", "Salary", 5000.0, "debit", "USD");
+        Transaction t = createTransaction("15/03/2023", "Salary", 5000.0, "credit", "USD");
         list.addTransaction(t);
 
         outputStreamCaptor.reset();
@@ -81,7 +84,7 @@ public class TransactionsListTest {
 
     @Test
     public void testDeleteTransactionSuccess() {
-        Transaction t = createTransaction("15/03/2023", "Salary", 5000.0, "debit", "USD");
+        Transaction t = createTransaction("15/03/2023", "Salary", 5000.0, "credit", "USD");
         list.addTransaction(t);
         int id = t.getId();
 
@@ -108,7 +111,7 @@ public class TransactionsListTest {
 
         List<Posting> newPostings = new ArrayList<>();
         newPostings.add(new Posting("Expenses:General", 1200.0));
-        newPostings.add(new Posting("Assets:Cash", -1200.0)); // Credit balancing entry
+        newPostings.add(new Posting("Assets:Cash", -1200.0));
         list.editTransaction(id, null, null, newPostings, null);
 
         outputStreamCaptor.reset();
@@ -182,5 +185,76 @@ public class TransactionsListTest {
         String output = outputStreamCaptor.toString();
         Assertions.assertTrue(output.contains("Scope: Assets:Bank"));
         Assertions.assertTrue(output.contains("Assets:Bank:DBS"));
+    }
+
+    @Test
+    public void testGetAccountBalanceIncludesChildren() {
+        List<Posting> postings = new ArrayList<>();
+        postings.add(new Posting("Assets:Bank:DBS", 100.0));
+        postings.add(new Posting("Income:Salary", 100.0));
+        list.addTransaction(new Transaction("01/01/2026", "Salary", postings, "USD"));
+
+        Assertions.assertEquals(100.0, list.getAccountBalance("Assets"), 0.0001);
+        Assertions.assertEquals(100.0, list.getAccountBalance("Assets:Bank"), 0.0001);
+        Assertions.assertEquals(100.0, list.getAccountBalance("Assets:Bank:DBS"), 0.0001);
+    }
+
+    @Test
+    public void testFilterTransactionsByAccount_nullReturnsOriginal() {
+        List<Transaction> txns = new ArrayList<>();
+        txns.add(createTransaction("01/01/2026", "A", 10.0, "debit", "USD"));
+
+        List<Transaction> result = TransactionsList.filterTransactionsByAccount(txns, null);
+        Assertions.assertEquals(1, result.size());
+    }
+
+    @Test
+    public void testFilterTransactionsByDateInclusiveBounds() {
+        List<Transaction> txns = new ArrayList<>();
+        txns.add(createTransaction("01/01/2026", "A", 10.0, "debit", "USD"));
+        txns.add(createTransaction("05/01/2026", "B", 10.0, "debit", "USD"));
+        txns.add(createTransaction("10/01/2026", "C", 10.0, "debit", "USD"));
+
+        List<Transaction> result = TransactionsList.filterTransactionsByDate(
+                txns, LocalDate.of(2026, 1, 5), LocalDate.of(2026, 1, 10));
+
+        Assertions.assertEquals(2, result.size());
+    }
+
+    @Test
+    public void testFilterTransactionsByRegex_caseInsensitive() {
+        List<Transaction> txns = new ArrayList<>();
+        txns.add(createTransaction("01/01/2026", "Lunch", 10.0, "debit", "USD"));
+        txns.add(createTransaction("02/01/2026", "DINNER", 10.0, "debit", "USD"));
+
+        List<Transaction> result = TransactionsList.filterTransactionsByRegex(txns, "dinner");
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals("DINNER", result.get(0).getDescription());
+    }
+
+    @Test
+    public void testFilterTransactionsByRegex_invalidPatternThrows() {
+        List<Transaction> txns = new ArrayList<>();
+        txns.add(createTransaction("01/01/2026", "Lunch", 10.0, "debit", "USD"));
+
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> TransactionsList.filterTransactionsByRegex(txns, "["));
+    }
+
+    @Test
+    public void testDisplayCurrencySetAndGet() {
+        list.setDisplayCurrency("usd");
+        Assertions.assertEquals("USD", list.getDisplayCurrency());
+    }
+
+    @Test
+    public void testAddUnbalancedTransactionThrows() {
+        List<Posting> postings = new ArrayList<>();
+        postings.add(new Posting("Assets:Cash", 10.0));
+        postings.add(new Posting("Expenses:Food", 10.0));
+
+        Transaction bad = new Transaction("01/01/2026", "Bad", postings, "USD");
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> list.addTransaction(bad));
     }
 }

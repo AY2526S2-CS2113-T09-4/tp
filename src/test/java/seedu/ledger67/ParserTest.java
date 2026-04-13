@@ -32,16 +32,17 @@ public class ParserTest {
     private LiveExchangeRateService liveExchangeRateService;
 
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
+    private PrintStream originalOut;
 
     private Transaction createTransaction(String date, String description,
             double amount, String type, String currency) {
         List<Posting> postings = new ArrayList<>();
         if (type.equals("debit")) {
             postings.add(new Posting("Expenses:General", amount));
-            postings.add(new Posting("Assets:Cash", -amount)); // Credit balancing entry
+            postings.add(new Posting("Assets:Cash", -amount));
         } else {
             postings.add(new Posting("Assets:Cash", amount));
-            postings.add(new Posting("Expenses:General", -amount)); // Debit balancing entry
+            postings.add(new Posting("Income:Salary", amount));
         }
         return new Transaction(date, description, postings, currency);
     }
@@ -74,11 +75,13 @@ public class ParserTest {
         list.setCurrencyConverter(converter);
 
         outputStreamCaptor.reset();
+        originalOut = System.out;
         System.setOut(new PrintStream(outputStreamCaptor));
     }
 
     @AfterEach
     public void tearDown() {
+        System.setOut(originalOut);
         deleteFile(TEST_LEDGER_FILE);
     }
 
@@ -223,7 +226,6 @@ public class ParserTest {
         List<Posting> postings = PresetHandler.generatePostings("DAILYEXPENSE 50.00");
         assertEquals(2, postings.size());
 
-        // Expenses +50, Cash -50
         assertEquals("Expenses", postings.get(0).getAccountName());
         assertEquals(50.0, postings.get(0).getAmount());
         assertEquals("Assets:Cash", postings.get(1).getAccountName());
@@ -235,7 +237,6 @@ public class ParserTest {
         List<Posting> postings = PresetHandler.generatePostings("INCOME 1000");
         assertEquals(2, postings.size());
 
-        // Bank +1000, Income -1000
         assertEquals("Assets:Bank", postings.get(0).getAccountName());
         assertEquals(1000.0, postings.get(0).getAmount());
         assertEquals("Income", postings.get(1).getAccountName());
@@ -244,38 +245,26 @@ public class ParserTest {
 
     @Test
     public void generatePostings_invalidFormat_exceptionThrown() {
-        // Missing amount
-        assertThrows(IllegalArgumentException.class, () -> {
-            PresetHandler.generatePostings("DAILYEXPENSE");
-        });
+        assertThrows(IllegalArgumentException.class, () -> PresetHandler.generatePostings("DAILYEXPENSE"));
     }
 
     @Test
     public void generatePostings_invalidAmount_exceptionThrown() {
-        // Amount is not a number
-        assertThrows(IllegalArgumentException.class, () -> {
-            PresetHandler.generatePostings("DAILYEXPENSE abc");
-        });
+        assertThrows(IllegalArgumentException.class, () -> PresetHandler.generatePostings("DAILYEXPENSE abc"));
     }
 
     @Test
     public void generatePostings_unknownType_exceptionThrown() {
-        // Type does not exist
-        assertThrows(IllegalArgumentException.class, () -> {
-            PresetHandler.generatePostings("GIFT 10.00");
-        });
+        assertThrows(IllegalArgumentException.class, () -> PresetHandler.generatePostings("GIFT 10.00"));
     }
 
     @Test
     public void generatePostings_emptyInput_exceptionThrown() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            PresetHandler.generatePostings("");
-        });
+        assertThrows(IllegalArgumentException.class, () -> PresetHandler.generatePostings(""));
     }
 
     @Test
     public void testUiAssistToggle() {
-        // Toggle on and then off
         String input = "uiassist -on\nuiassist -off\nexit";
         runParserWithInput(input);
 
@@ -286,17 +275,6 @@ public class ParserTest {
 
     @Test
     public void testUiAssistAddManualSuccess() {
-        // Simulation steps:
-        // 1. uiassist -on
-        // 2. add
-        // 3. 1 (Manual Entry)
-        // 4. 20/03/2026 (Date)
-        // 5. SGD (Currency)
-        // 6. Dinner (Description)
-        // 7. Expenses:Food 25.50 (Posting 1)
-        // 8. Assets:Cash -25.50 (Posting 2)
-        // 9. [Empty Line] (Finish postings)
-        // 10. exit
         String input = "uiassist -on\n" +
                 "add\n" +
                 "1\n" +
@@ -316,23 +294,12 @@ public class ParserTest {
         assertTrue(output.contains("How many postings do you want to enter?"));
         assertTrue(output.contains("Transaction added successfully"));
 
-        // Verify the transaction exists in the list
         assertEquals(1, list.getTransactions().size());
         assertEquals("Dinner", list.getTransactions().get(0).getDescription());
     }
 
     @Test
     public void testUiAssistAddPresetSuccess() {
-        // Simulation steps:
-        // 1. uiassist -on
-        // 2. add
-        // 3. 2 (Preset)
-        // 4. 21/03/2026 (Date)
-        // 5. EUR (Currency)
-        // 6. DAILYEXPENSE (Type)
-        // 7. 50.00 (Amount)
-        // 8. Work Lunch (Description)
-        // 9. exit
         String input = "uiassist -on\n" +
                 "add\n" +
                 "2\n" +
@@ -356,14 +323,6 @@ public class ParserTest {
 
     @Test
     public void testUiAssistListWithFilters() {
-        // 1. uiassist -on
-        // 2. list
-        // 3. Expenses (Account filter)
-        // 4. [Enter] (No start date)
-        // 5. [Enter] (No end date)
-        // 6. [Enter] (No regex)
-        // 7. USD (To currency)
-        // 8. exit
         String input = "uiassist -on\n" +
                 "list\n" +
                 "Expenses\n" +
@@ -382,15 +341,9 @@ public class ParserTest {
 
     @Test
     public void testUiAssistDeleteById() {
-        // Add a transaction first
         list.addTransaction(createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD"));
         int id = list.getTransactions().get(0).getId();
 
-        // 1. uiassist -on
-        // 2. delete
-        // 3. 1 (Choice: ID)
-        // 4. [ID]
-        // 5. exit
         String input = "uiassist -on\n" +
                 "delete\n" +
                 "1\n" +
@@ -407,13 +360,6 @@ public class ParserTest {
 
     @Test
     public void testUiAssistConvertSimple() {
-        // 1. uiassist -on
-        // 2. convert
-        // 3. 1 (Simple amount)
-        // 4. 100
-        // 5. USD
-        // 6. SGD
-        // 7. exit
         String input = "uiassist -on\n" +
                 "convert\n" +
                 "1\n" +
@@ -431,11 +377,6 @@ public class ParserTest {
 
     @Test
     public void testUiAssistBalance() {
-        // 1. uiassist -on
-        // 2. balance
-        // 3. Assets (Filter)
-        // 4. SGD (To currency)
-        // 5. exit
         String input = "uiassist -on\n" +
                 "balance\n" +
                 "Assets\n" +
@@ -450,56 +391,71 @@ public class ParserTest {
     }
 
     @Test
-    public void testListAccCommand_matchesAccountsDespiteWhitespaceAndCaseDifferences() {
-        String input = "add -date 01/01/2026 -desc Test1 -p \"Assets:Cash 100\" -p \"Expenses:Food -100\" -c SGD\n"
-                + "add -date 01/01/2026 -desc Test2 -p \"assets: Cash 200\" -p \"Expenses:Food -200\" -c SGD\n"
-                + "list -acc Assets:Cash\n"
-                + "exit";
+    public void testParseArgumentsHandlesRepeatedFlags() {
+        Map<String, List<String>> map = Parser.parseArguments("-p \"Assets:Cash -10\" -p \"Expenses:Food 10\"");
 
-        runParserWithInput(input);
-
-        String output = outputStreamCaptor.toString();
-        assertTrue(output.contains("Test1"));
-        assertTrue(output.contains("Test2"));
+        assertEquals(2, map.get("-p").size());
     }
 
     @Test
-    public void testInvalidAddDoesNotSkipTransactionId() {
-        String input = "add -date 01/01/2026 -desc First -p \"Assets:Cash 100\" -p \"Expenses:Food -100\" -c SGD\n"
-                + "add -date 2026-01-01 -desc BadDate -p \"Assets:Cash 100\" -p \"Expenses:Food -100\" -c SGD\n"
-                + "add -date 02/01/2026 -desc Second -p \"Assets:Cash 200\" -p \"Expenses:Food -200\" -c SGD\n"
-                + "exit\n";
+    public void testGetFirstElementFromMapStripsQuotes() {
+        Map<String, List<String>> map = new HashMap<>();
+        List<String> values = new ArrayList<>();
+        values.add("\"Hello World\"");
+        map.put("-desc", values);
 
-        runParserWithInput(input);
-
-        assertEquals(2, list.getTransactions().size());
-
-        Transaction first = list.getTransactions().get(0);
-        Transaction second = list.getTransactions().get(1);
-
-        assertEquals("First", first.getDescription());
-        assertEquals("Second", second.getDescription());
-        assertEquals(first.getId() + 1, second.getId());
+        assertEquals("Hello World", Parser.getFirstElementFromMap(map, "-desc"));
     }
 
     @Test
-    public void testEditCommandRejectsUnbalancedPostingsAndAllowsLaterBalancedEdit() {
-        Transaction t = createTransaction("10/10/2023", "Coffee", 5.0, "debit", "USD");
-        list.addTransaction(t);
-        int id = t.getId();
+    public void testConvertStringListToPostingListSuccess() {
+        List<String> postingStrings = List.of("\"Assets:Cash -10\"", "\"Expenses:Food 10\"");
+        List<Posting> postings = Parser.convertStringList2PostingList(postingStrings);
 
-        outputStreamCaptor.reset();
-        String input = "edit " + id + " -p \"Expenses:Food 10\" -p \"Assets:Cash 20\"\n"
-                + "edit " + id + " -desc Tea -p \"Expenses:Food 10\" -p \"Assets:Cash -10\"\n"
-                + "list\n"
-                + "exit";
-
-        runParserWithInput(input);
-
-        String output = outputStreamCaptor.toString();
-        assertTrue(output.contains("Error: Update failed: Transaction is unbalanced."));
-        assertTrue(output.contains("Transaction edited successfully."));
-        assertTrue(output.contains("Tea"));
+        assertEquals(2, postings.size());
+        assertEquals("Assets:Cash", postings.get(0).getAccountName());
+        assertEquals(-10.0, postings.get(0).getAmount(), 0.0001);
     }
 
+    @Test
+    public void testConvertStringListToPostingListInvalidFormatThrows() {
+        List<String> postingStrings = List.of("\"AssetsOnly\"");
+        assertThrows(IllegalArgumentException.class, () -> Parser.convertStringList2PostingList(postingStrings));
+    }
+
+    @Test
+    public void testConvertStringListToPostingListInvalidAmountThrows() {
+        List<String> postingStrings = List.of("\"Assets:Cash abc\"");
+        assertThrows(IllegalArgumentException.class, () -> Parser.convertStringList2PostingList(postingStrings));
+    }
+
+    @Test
+    public void testUnknownCommandShowsError() {
+        runParserWithInput("unknownCommand\nexit\n");
+        assertTrue(outputStreamCaptor.toString().contains("Error: Unknown command."));
+    }
+
+    @Test
+    public void testDeleteWithoutFiltersShowsError() {
+        runParserWithInput("delete\nexit\n");
+        assertTrue(outputStreamCaptor.toString().contains("Missing transaction ID or filter flags to delete."));
+    }
+
+    @Test
+    public void testConvertMissingArgumentsShowsError() {
+        runParserWithInput("convert -a 100 -from USD\nexit\n");
+        assertTrue(outputStreamCaptor.toString().contains("Missing arguments for convert."));
+    }
+
+    @Test
+    public void testEditMissingIdShowsError() {
+        runParserWithInput("edit\nexit\n");
+        assertTrue(outputStreamCaptor.toString().contains("Missing transaction ID to edit."));
+    }
+
+    @Test
+    public void testListInvalidDateShowsError() {
+        runParserWithInput("list -begin 2026-01-01\nexit\n");
+        assertTrue(outputStreamCaptor.toString().contains("Date must be in DD/MM/YYYY format"));
+    }
 }

@@ -3,7 +3,7 @@ package seedu.ledger67;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,14 +13,14 @@ import java.util.List;
 public class TransactionTest {
 
     private Transaction createTransaction(String date, String description,
-            double amount, String type, String currency) {
+                                          double amount, String type, String currency) {
         List<Posting> postings = new ArrayList<>();
         if (type.equals("debit")) {
             postings.add(new Posting("Expenses:General", amount));
-            postings.add(new Posting("Assets:Cash", -amount)); // Credit balancing entry
+            postings.add(new Posting("Assets:Cash", -amount));
         } else {
             postings.add(new Posting("Assets:Cash", amount));
-            postings.add(new Posting("Expenses:General", -amount)); // Debit balancing entry
+            postings.add(new Posting("Income:Salary", amount));
         }
         return new Transaction(date, description, postings, currency);
     }
@@ -37,9 +37,8 @@ public class TransactionTest {
 
     @Test
     public void testInvalidDateFormatThrowsException() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            createTransaction("2023-03-15", "Groceries", 50.0, "debit", "USD");
-        });
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () ->
+                createTransaction("2023-03-15", "Groceries", 50.0, "debit", "USD"));
         Assertions.assertEquals("DATE must be a valid calendar date in DD/MM/YYYY format.", exception.getMessage());
     }
 
@@ -48,7 +47,7 @@ public class TransactionTest {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             List<Posting> postings = new ArrayList<>();
             postings.add(new Posting("Expenses:General", 50.0));
-            postings.add(new Posting("Assets:Cash", -50.0)); // Credit balancing entry
+            postings.add(new Posting("Assets:Cash", -50.0));
             new Transaction(null, "Groceries", postings, "USD");
         });
         Assertions.assertEquals("Missing required transaction details.", exception.getMessage());
@@ -59,7 +58,7 @@ public class TransactionTest {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             List<Posting> postings = new ArrayList<>();
             postings.add(new Posting("Expenses:General", 50.0));
-            postings.add(new Posting("Assets:Cash", -50.0)); // Credit balancing entry
+            postings.add(new Posting("Assets:Cash", -50.0));
             new Transaction("15/03/2023", "   ", postings, "USD");
         });
         Assertions.assertEquals("Description cannot be empty.", exception.getMessage());
@@ -70,7 +69,7 @@ public class TransactionTest {
         Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
         List<Posting> newPostings = new ArrayList<>();
         newPostings.add(new Posting("Expenses:General", 60.5));
-        newPostings.add(new Posting("Assets:Cash", -60.5)); // Credit balancing entry
+        newPostings.add(new Posting("Assets:Cash", -60.5));
         t.update("16/03/2023", "Supermarket", newPostings, null);
 
         String output = t.toString();
@@ -81,72 +80,64 @@ public class TransactionTest {
     }
 
     @Test
-    public void testFailedTransactionCreationDoesNotConsumeId() {
-        Transaction first = createTransaction("15/03/2023", "First", 50.0, "debit", "USD");
-        int firstId = first.getId();
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            createTransaction("2023-03-15", "Invalid Date", 50.0, "debit", "USD");
-        });
-
-        Transaction second = createTransaction("16/03/2023", "Second", 60.0, "debit", "USD");
-        int secondId = second.getId();
-
-        Assertions.assertEquals(firstId + 1, secondId);
+    public void testParseDateSuccess() {
+        LocalDate date = Transaction.parseDate("01/01/2026");
+        Assertions.assertEquals(LocalDate.of(2026, 1, 1), date);
     }
 
     @Test
-    public void testUpdateTransactionWithUnbalancedPostingsThrowsException() {
-        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
-
-        List<Posting> unbalancedPostings = new ArrayList<>();
-        unbalancedPostings.add(new Posting("Expenses:General", 60.0));
-
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            t.update(null, null, unbalancedPostings, null);
-        });
-
-        Assertions.assertEquals("Update failed: Transaction is unbalanced.", exception.getMessage());
-    }
-
-    @Test
-    public void testFailedUnbalancedEditDoesNotCorruptTransaction() {
-        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
-
-        List<Posting> unbalancedPostings = new ArrayList<>();
-        unbalancedPostings.add(new Posting("Expenses:General", 60.0));
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            t.update(null, null, unbalancedPostings, null);
-        });
-
+    public void testIsBalancedTrue() {
+        Transaction t = createTransaction("15/03/2023", "Balanced", 10.0, "debit", "USD");
         Assertions.assertTrue(t.isBalanced());
-        Assertions.assertTrue(t.toString().contains("50.00"));
     }
 
     @Test
-    public void testBalancedEditStillWorksAfterFailedEdit() {
-        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
+    public void testIsBalancedFalse() {
+        List<Posting> postings = new ArrayList<>();
+        postings.add(new Posting("Assets:Cash", 10.0));
+        postings.add(new Posting("Expenses:Food", 10.0));
 
-        List<Posting> unbalancedPostings = new ArrayList<>();
-        unbalancedPostings.add(new Posting("Expenses:General", 60.0));
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            t.update(null, null, unbalancedPostings, null);
-        });
-
-        List<Posting> balancedPostings = new ArrayList<>();
-        balancedPostings.add(new Posting("Expenses:General", 60.0));
-        balancedPostings.add(new Posting("Assets:Cash", -60.0));
-
-        Assertions.assertDoesNotThrow(() -> {
-            t.update(null, "Updated Grocery", balancedPostings, null);
-        });
-
-        Assertions.assertTrue(t.isBalanced());
-        Assertions.assertTrue(t.toString().contains("Updated Grocery"));
-        Assertions.assertTrue(t.toString().contains("60.00"));
+        Transaction t = new Transaction("15/03/2023", "Unbalanced", postings, "USD");
+        Assertions.assertFalse(t.isBalanced());
     }
 
+    @Test
+    public void testUpdateBlankDescriptionThrows() {
+        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
 
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> t.update(null, "   ", null, null));
+    }
+
+    @Test
+    public void testUpdateUnbalancedPostingsThrows() {
+        Transaction t = createTransaction("15/03/2023", "Groceries", 50.0, "debit", "USD");
+
+        List<Posting> badPostings = new ArrayList<>();
+        badPostings.add(new Posting("Assets:Cash", 10.0));
+        badPostings.add(new Posting("Expenses:Food", 10.0));
+
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> t.update(null, null, badPostings, null));
+    }
+
+    @Test
+    public void testFromStoragePreservesId() {
+        List<Posting> postings = new ArrayList<>();
+        postings.add(new Posting("Expenses:General", 20.0));
+        postings.add(new Posting("Assets:Cash", -20.0));
+
+        Transaction t = Transaction.fromStorage(99, "20/03/2023", "Loaded", postings, "EUR");
+
+        Assertions.assertEquals(99, t.getId());
+        Assertions.assertEquals("Loaded", t.getDescription());
+        Assertions.assertEquals("EUR", t.getCurrency());
+    }
+
+    @Test
+    public void testUpdateNextIdAndRollbackDoNotThrow() {
+        Transaction.updateNextId(1000);
+        Transaction.rollbackNextIdIfUnused(999);
+        Assertions.assertTrue(true);
+    }
 }

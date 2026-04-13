@@ -4,8 +4,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,14 +17,14 @@ public class StorageTest {
     private static final String TEST_FILE_PATH = "data/storage-test-ledger.txt";
 
     private Transaction createTransaction(String date, String description,
-            double amount, String type, String currency) {
+                                          double amount, String type, String currency) {
         List<Posting> postings = new ArrayList<>();
         if (type.equals("debit")) {
             postings.add(new Posting("Expenses:General", amount));
-            postings.add(new Posting("Assets:Cash", -amount)); // Credit balancing entry
+            postings.add(new Posting("Assets:Cash", -amount));
         } else {
             postings.add(new Posting("Assets:Cash", amount));
-            postings.add(new Posting("Expenses:General", -amount)); // Debit balancing entry
+            postings.add(new Posting("Income:Salary", amount));
         }
         return new Transaction(date, description, postings, currency);
     }
@@ -98,7 +99,7 @@ public class StorageTest {
         Transaction t = createTransaction("20/03/2023", "Book Purchase", 25.75, "debit", "USD");
         List<Posting> newPostings = new ArrayList<>();
         newPostings.add(new Posting("Expenses:General", 34.50));
-        newPostings.add(new Posting("Assets:Cash", -34.50)); // Credit balancing entry
+        newPostings.add(new Posting("Assets:Cash", -34.50));
         t.update(null, null, newPostings, "SGD");
 
         storage.save(List.of(t));
@@ -113,31 +114,37 @@ public class StorageTest {
     }
 
     @Test
-    public void testLoadWithCorruptedLine_skipsBadLineAndLoadsValidOnes() {
-        Storage storage = new Storage(TEST_FILE_PATH);
-
-        try {
-            File file = new File(TEST_FILE_PATH);
-            File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
-
-            java.nio.file.Files.writeString(
-                    file.toPath(),
-                    "1\t15/03/2023\tValid Entry\tUSD\tExpenses:General=50.0;Assets:Cash=-50.0\n"
-                            + "2\t33/03/2026\tBad Date\tUSD\tExpenses:General=10.0;Assets:Cash=-10.0\n"
-                            + "3\t16/03/2023\tAnother Valid Entry\tSGD\tExpenses:General=20.0;Assets:Cash=-20.0\n"
-            );
-
-            List<Transaction> loadedList = storage.load();
-
-            Assertions.assertEquals(2, loadedList.size());
-            Assertions.assertEquals("Valid Entry", loadedList.get(0).getDescription());
-            Assertions.assertEquals("Another Valid Entry", loadedList.get(1).getDescription());
-        } catch (Exception e) {
-            Assertions.fail("Test should not throw exception, but got: " + e.getMessage());
+    public void testLoadSkipsCorruptedLineAndContinues() throws Exception {
+        File file = new File(TEST_FILE_PATH);
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
         }
+
+        Storage storage = new Storage(TEST_FILE_PATH);
+        Transaction valid = createTransaction("21/03/2023", "Valid Txn", 12.5, "debit", "USD");
+        storage.save(List.of(valid));
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(TEST_FILE_PATH, true))) {
+            writer.newLine();
+            writer.write("bad\tcorrupted\tline");
+        }
+
+        List<Transaction> loaded = storage.load();
+        Assertions.assertEquals(1, loaded.size());
+        Assertions.assertEquals("Valid Txn", loaded.get(0).getDescription());
     }
 
+    @Test
+    public void testSaveAndLoadEscapedDescription() {
+        Storage storage = new Storage(TEST_FILE_PATH);
+
+        Transaction t = createTransaction("22/03/2023", "Line1\tTabbed\nLine2\\Slash", 10.0, "debit", "USD");
+        storage.save(List.of(t));
+
+        List<Transaction> loaded = storage.load();
+
+        Assertions.assertEquals(1, loaded.size());
+        Assertions.assertEquals("Line1\tTabbed\nLine2\\Slash", loaded.get(0).getDescription());
+    }
 }
