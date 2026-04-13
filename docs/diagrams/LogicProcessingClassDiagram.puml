@@ -1,0 +1,101 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+title Ledger67 - Logic / Processing Components Class Diagram
+
+class Parser {
+  - list: TransactionsList
+  - converter: CurrencyConverter
+  - exchangeRateStorage: ExchangeRateStorage
+  - liveExchangeRateService: LiveExchangeRateService
+  - isUiAssistOn: boolean
+  + start(): void
+  + parseArguments(args): Map<String, List<String>>
+}
+
+class UiAssistFactory {
+  + getInteractiveArguments(command, scanner): String
+}
+
+class TransactionsList {
+  - transactions: List<Transaction>
+  - storage: Storage
+  - converter: CurrencyConverter
+  + addTransaction(t): void
+  + editTransaction(...): void
+  + deleteTransaction(id): void
+  + getTransactionById(id): Transaction
+  + printBalanceSheet(): void
+  + printBalanceSheet(acc): void
+}
+
+class Storage {
+  - filePath: String
+  + load(): List<Transaction>
+  + save(transactions): void
+}
+
+class BalanceSheet {
+  - accountTotals: Map<String, Double>
+  - scope: String
+  - reportCurrency: String
+  - converted: boolean
+  + print(): void
+  + exportToCsv(filePath): void
+}
+
+class PresetHandler {
+  + generatePostings(presetData): List<Posting>
+}
+
+class CurrencyConverter {
+  - rateData: ExchangeRateData
+  + convert(amount, fromCurrency, toCurrency): double
+  + updateRates(rateData): void
+}
+
+class ExchangeRateStorage {
+  - filePath: String
+  + load(): ExchangeRateData
+  + save(data): void
+}
+
+class LiveExchangeRateService {
+  + fetchLatest(baseCurrency, symbols): ExchangeRateData
+}
+
+class ExchangeRateData {
+  - base: String
+  - date: String
+  - rates: Map<String, Double>
+  + isValid(): boolean
+}
+
+Parser --> TransactionsList : uses
+Parser --> UiAssistFactory : delegates guided input
+Parser --> PresetHandler : resolves presets
+Parser --> CurrencyConverter : requests conversions
+Parser --> ExchangeRateStorage : loads/saves rates
+Parser --> LiveExchangeRateService : refreshes rates
+
+TransactionsList --> Storage : persists transactions
+TransactionsList --> BalanceSheet : creates report
+TransactionsList --> CurrencyConverter : optional conversion
+TransactionsList "1" *-- "many" Transaction : manages
+
+CurrencyConverter --> ExchangeRateData : uses
+ExchangeRateStorage --> ExchangeRateData : reads/writes
+LiveExchangeRateService --> ExchangeRateData : returns
+
+note bottom of Parser
+Acts as the main controller for command handling
+and coordinates the confirmation workflow.
+end note
+
+note bottom of TransactionsList
+Acts as the main domain manager for CRUD,
+filtering, and balance-sheet aggregation.
+end note
+
+@enduml

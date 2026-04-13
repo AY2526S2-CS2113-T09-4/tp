@@ -1,22 +1,23 @@
 @startuml
+
 actor User
-participant Parser
-participant TransactionsList
-participant CurrencyConverter
-participant Storage
+participant ":TransactionsList" as List
+participant ":CurrencyConverter" as Converter
+participant ":Storage" as Storage
 
-== Step 1: Convert (view only) ==
-User -> Parser : convert transaction 3 -to SGD
-Parser -> TransactionsList : getTransactionById(3)
-Parser -> CurrencyConverter : convert(...)
-Parser -> User : display converted value
-Parser -> Parser : store pending state
+== Convert (View Only) ==
+User -> Converter : convert(transaction, target)
+Converter --> User : converted result
 
-== Step 2: Confirm ==
-User -> Parser : confirm
-Parser -> TransactionsList : editTransaction(...)
-TransactionsList -> Storage : save(...)
-Storage --> TransactionsList : success
-Parser -> User : "Transaction confirmed and stored"
+== Confirm ==
+User -> List : confirm(transaction)
+
+List -> Converter : applyConversion(...)
+Converter --> List : updated transaction
+
+List -> Storage : save(...)
+Storage --> List : success
+
+List --> User : "Transaction confirmed"
 
 @enduml

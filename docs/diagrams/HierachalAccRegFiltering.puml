@@ -1,36 +1,23 @@
-```puml
 @startuml
+
 actor User
+participant ":TransactionsList" as List
+participant ":CurrencyConverter" as Converter
+participant ":Storage" as Storage
 
-participant Parser
-participant TransactionsList
-participant Transaction
-participant Posting
-participant Account
+== Convert (View Only) ==
+User -> Converter : convert(transaction, target)
+Converter --> User : converted result
 
-User -> Parser : "list -acc Assets"
-Parser -> Parser : parse command\nextract accountFilter
+== Confirm ==
+User -> List : confirm(transaction)
 
-Parser -> TransactionsList : listTransactionsByAccount("Assets")
+List -> Converter : applyConversion(...)
+Converter --> List : updated transaction
 
-TransactionsList -> TransactionsList : iterate transactions
+List -> Storage : save(...)
+Storage --> List : success
 
-loop for each Transaction
-    TransactionsList -> Transaction : getPostings()
+List --> User : "Transaction confirmed"
 
-    loop for each Posting
-        Transaction -> Posting : getAccount()
-
-        Posting -> Account : isUnder("Assets")
-
-        Account --> Posting : true / false
-    end
-
-    alt match found
-        TransactionsList -> TransactionsList : print transaction
-    end
-end
-
-TransactionsList --> Parser : output
-Parser --> User : display results
 @enduml
