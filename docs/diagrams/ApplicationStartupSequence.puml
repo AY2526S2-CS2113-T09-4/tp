@@ -1,5 +1,4 @@
 @startuml
-skinparam backgroundColor #EEEBDC
 skinparam sequence {
     ParticipantBackgroundColor #FFF
     ActorBackgroundColor #FFF

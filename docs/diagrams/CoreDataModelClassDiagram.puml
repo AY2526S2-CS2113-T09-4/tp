@@ -1,0 +1,54 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+title Ledger67 - Core Data Model Class Diagram
+
+class Transaction {
+  - id: int
+  - date: String
+  - description: String
+  - postings: List<Posting>
+  - currency: String
+  + Transaction(date, description, postings, currency)
+  + getId(): int
+  + getDate(): String
+  + getDescription(): String
+  + getPostings(): List<Posting>
+  + getCurrency(): String
+  + isBalanced(): boolean
+}
+
+class Posting {
+  - accountName: String
+  - amount: double
+  + Posting(accountName, amount)
+  + getAccountName(): String
+  + getAmount(): double
+}
+
+class Account {
+  - fullName: String
+  - hierarchy: List<String>
+  + Account(fullName)
+  + getFullName(): String
+  + getHierarchy(): List<String>
+  + getRoot(): String
+  + isUnder(parentAccount): boolean
+}
+
+Transaction "1" *-- "2..*" Posting : contains
+Posting ..> Account : validates against
+
+note right of Transaction
+Represents one double-entry transaction.
+A valid transaction must contain at least
+two postings and remain balanced.
+end note
+
+note right of Account
+Supports hierarchical account names such as
+Assets:Cash and Assets:Bank:DBS.
+end note
+
+@enduml

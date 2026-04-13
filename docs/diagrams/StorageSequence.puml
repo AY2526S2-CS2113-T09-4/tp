@@ -1,40 +1,40 @@
 @startuml
-skinparam backgroundColor #EEEBDC
-skinparam sequence {
-    ParticipantBackgroundColor #FFF
-    ActorBackgroundColor #FFF
-    LifeLineBackgroundColor #FFF
-}
 
 actor User
-participant "Duke" as Duke
-participant "Storage" as Storage
-participant "TransactionsList" as TransactionsList
-participant "Parser" as Parser
-participant "Transaction" as Transaction
+participant ":Ledger67" as App
+participant ":Storage" as Storage
+participant ":TransactionsList" as List
+participant ":Transaction" as Transaction
 
-== Application startup ==
-Duke -> Storage : new Storage("data/ledger.txt")
-Duke -> TransactionsList : new TransactionsList(storage)
-TransactionsList -> Storage : load()
-Storage --> TransactionsList : List<Transaction>
+== Application Startup ==
+App -> Storage : new Storage("data/ledger.txt")
+activate Storage
+Storage --> App : storage instance
+deactivate Storage
 
-== Add and persist transaction ==
-User -> Duke : enters add command
-Duke -> Parser : start()
-Parser -> Transaction : new Transaction(...)
-Transaction --> Parser : transaction
-Parser -> TransactionsList : addTransaction(transaction)
-TransactionsList -> TransactionsList : transactions.add(transaction)
-TransactionsList -> Storage : save(transactions)
-Storage --> TransactionsList : write complete
-TransactionsList --> Parser : success
-Parser -> System.out : "Transaction added successfully."
+App -> List : new TransactionsList(Storage)
+activate List
+List -> Storage : load()
+Storage --> List : List<Transaction>
+deactivate List
+
+== Add Transaction ==
+User -> App : add command
+App -> Transaction : new Transaction(...)
+activate Transaction
+Transaction --> App : transaction
+deactivate Transaction
+
+App -> List : addTransaction(transaction)
+activate List
+List -> Storage : save(transactions)
+Storage --> List : success
+List --> App : success
+deactivate List
 
 note over Storage
-  Storage persists transactions
-  in ledger.txt using tab-separated fields.
-  Existing transactions are loaded on startup,
-  and every write operation triggers save().
+Persists transactions to file.
+Loads on startup and saves after updates.
 end note
+
 @enduml
